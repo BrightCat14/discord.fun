@@ -43,8 +43,7 @@ def main():
     dest_folder = os.path.join(appdata_folder, 'discordfun')
     downloaded_file = os.path.join(dest_folder, "discord.fun.exe")
 
-    if not os.path.exists(downloaded_file):
-        downloaded_file = download_file(url, dest_folder)
+    downloaded_file = download_file(url, dest_folder)
         if not downloaded_file:
             print("Update process failed.")
             return
