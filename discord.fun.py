@@ -54,12 +54,33 @@ def menu_page_2():
 {Fore.CYAN} |_____||____|\___|\____| \___/ |__|\_||_____||__||__|    \__,_||__|__|
 {Fore.RESET}
                 {Fore.LIGHTWHITE_EX}1 - Change custom status by token
-                {Fore.LIGHTWHITE_EX}2 - Settings
-                {Fore.LIGHTWHITE_EX}0 - Back to Main Page
+                {Fore.LIGHTWHITE_EX}2 - Boost server by token (I dont know if it works or not)
+                {Fore.LIGHTWHITE_EX}3 - Join server by token
+                {Fore.LIGHTWHITE_EX}4 - Leave server by token
+                {Fore.LIGHTWHITE_EX}5 - Get guilds list
+                {Fore.LIGHTWHITE_EX}6 - Get channels in guild
+                {Fore.LIGHTWHITE_EX}7 - Send Message to all channels in guild
+                {Fore.LIGHTWHITE_EX}8 - Send Message to channel or channels in guild
+                {Fore.LIGHTWHITE_EX}9 - idk what here
+                {Fore.LIGHTWHITE_EX}0 - Back to page 1
                 {Fore.RESET}
     """)
 
-# The existing functions go here...
+def menu_page_3():
+    print(f"""
+{Fore.CYAN} ___    ____ _____   __   ___   ____   ___        _____  __ __  ____  
+{Fore.CYAN} |   \  |    / ___/  /  ] /   \ |    \ |   \      |     ||  |  ||    \ 
+{Fore.CYAN} |    \  |  (   \_  /  / |     ||  D  )|    \     |   __||  |  ||  _  |
+{Fore.CYAN} |  D  | |  |\__  |/  /  |  O  ||    / |  D  |    |  |_  |  |  ||  |  |
+{Fore.CYAN} |     | |  |/  \ /   \_ |     ||    \ |     | __ |   _] |  :  ||  |  |
+{Fore.CYAN} |     | |  |\    \     ||     ||  .  \|     ||  ||  |   |     ||  |  |
+{Fore.CYAN} |_____||____|\___|\____| \___/ |__|\_||_____||__||__|    \__,_||__|__|
+{Fore.RESET}
+                {Fore.LIGHTWHITE_EX}1 - test
+                {Fore.LIGHTWHITE_EX}0 - Back to page 2
+                {Fore.RESET}
+    """)
+
 def get_friends_list(user_token):
     url = "https://discord.com/api/v9/users/@me/relationships"
     headers = {"Authorization": user_token}
@@ -72,6 +93,49 @@ def get_friends_list(user_token):
         return friend_ids
     else:
         print(f"Failed to retrieve friends list: {response.status_code}")
+        return []
+
+def get_friends_list_user(user_token):
+    url = "https://discord.com/api/v9/users/@me/relationships"
+    headers = {"Authorization": user_token}
+
+    response = requests.get(url, headers=headers)
+
+    if response.status_code == 200:
+        friends = response.json()
+        return '\n'.join([f"{friend['id']} - {friend['name']}" for friend in friends])
+    else:
+        print(f"Failed to retrieve friends list: {response.status_code}")
+        return []
+
+def get_discord_guilds(token):
+    url = "https://discord.com/api/v10/users/@me/guilds"
+    headers = {
+        "Authorization": f"{token}"
+    }
+
+    response = requests.get(url, headers=headers)
+
+    if response.status_code == 200:
+        guilds = response.json()
+        return [(guild['id'], guild['name']) for guild in guilds]
+    else:
+        print(f"Failed to fetch guilds: {response.status_code}")
+        return []
+
+def get_discord_guilds_user(token):
+    url = "https://discord.com/api/v10/users/@me/guilds"
+    headers = {
+        "Authorization": f"{token}"
+    }
+
+    response = requests.get(url, headers=headers)
+
+    if response.status_code == 200:
+        guilds = response.json()
+        return '\n'.join([f"{guild['id']} - {guild['name']}" for guild in guilds])
+    else:
+        print(f"Failed to fetch guilds: {response.status_code}")
         return []
 
 def change_bio(user_token, bio):
@@ -203,6 +267,50 @@ def change_custom_status(encoded_str, replacements, token):
     else:
         print(f"Failed to retrieve access token: {response.status_code} {response.text}")
 
+def get_channels_id(guild_id, token):
+    headers = {
+        'Authorization': token,
+        'Content-Type': 'application/json',
+    }
+
+    response = requests.get(f'https://discord.com/api/v10/guilds/{guild_id}/channels', headers=headers)
+
+    if response.status_code == 200:
+        channels = response.json()
+        return '\n'.join([f"{channel['id']} - {channel['name']}" for channel in channels])
+    else:
+        print(f'Failed to fetch channels: {response.status_code} - {response.text}')
+
+
+def get_channels_id_sys(guild_id, token):
+    headers = {
+        'Authorization': token,
+        'Content-Type': 'application/json',
+    }
+
+    response = requests.get(f'https://discord.com/api/v10/guilds/{guild_id}/channels', headers=headers)
+
+    if response.status_code == 200:
+        channels = response.json()
+        channels_id = [channel["id"] for channel in channels]
+        return channels_id
+    else:
+        print(f'Failed to fetch channels: {response.status_code} - {response.text}')
+
+def join_server(invite_link, USER_TOKEN):
+    HEADERS = {
+        'Authorization': USER_TOKEN
+    }
+    # Извлечение кода приглашения из ссылки
+    invite_code = invite_link.split('/')[-1]
+    url = f'https://discord.com/api/v9/invites/{invite_code}'
+    response = requests.post(url, headers=HEADERS)
+    if response.status_code == 200:
+        print(f'Successfully joined server with invite code {invite_code}')
+    elif response.status_code == 400:
+        print("Captcha Error")
+    else:
+        print(f'Failed to join server: {response.status_code} - {response.text}')
 def send_message_to_friend(user_token, message_content, id):
     headers = {'Authorization': user_token, 'Content-Type': 'application/json'}
 
@@ -224,6 +332,46 @@ def send_message_to_friend(user_token, message_content, id):
         except requests.exceptions.RequestException as e:
             print(f'Error sending message to friend with ID {friend_id}: {e}')
 
+def send_message_to_channel(user_token, message_content, id):
+    headers = {'Authorization': user_token, 'Content-Type': 'application/json'}
+    for channel_id in id:
+        url = f'https://discord.com/api/v9/channels/{id}/messages'
+        try:
+            response = requests.post(url, headers=headers, json={'recipient_id': channel_id})
+            if response.status_code == 200:
+                channel_id = response.json()['id']
+                url_message = f'https://discord.com/api/v10/channels/{channel_id}/messages'
+                response_message = requests.post(url_message, headers=headers, json={'content': message_content})
+
+                if response_message.status_code == 200:
+                    print(f'Message sent successfully to channel with ID {channel_id}')
+                else:
+                    print(f'Error sending message to channel with ID {channel_id}: {response_message.status_code}')
+            else:
+                print(f'Error creating channel for channel with ID {channel_id}: {response.status_code}')
+        except requests.exceptions.RequestException as e:
+            print(f'Error sending message to channel with ID {channel_id}: {e}')
+
+def leaver(token, guild_id):
+    # URL API для выхода из сервера
+    url = f'https://discord.com/api/v9/users/@me/guilds/{guild_id}'
+
+    # Заголовки для запроса
+    headers = {
+        'Authorization': f'{token}',
+        # Если вы используете бот токен, замените 'Bot' на 'Bearer' для пользовательского токена
+    }
+
+    # Выполнение DELETE-запроса для выхода из сервера
+    response = requests.delete(url, headers=headers)
+
+    # Проверка результата
+    if response.status_code == 204:
+        print('Successfully left the server.')
+    else:
+        print(f'Failed to leave the server. Status code: {response.status_code}, Response: {response.text}')
+
+
 def clear():
     os.system("cls" if platform.system() == "Windows" else "clear")
 
@@ -232,7 +380,7 @@ while True:
     with open('config.txt', 'r') as f:
         theme = f.read().strip()
     if theme == 'kali':
-        setting = f"{Fore.LIGHTGREEN_EX}{username}@kali:{Fore.BLUE}/{folder_name}$ "
+        setting = f"{Fore.LIGHTGREEN_EX}{username}@kali:{Fore.BLUE}/{folder_name}${Fore.LIGHTGREEN_EX} "
     elif theme == 'windows':
         setting = f"{current_directory}>"
     else:
@@ -243,7 +391,8 @@ while True:
     if choice == '1':
         clear()
         token = input(Fore.CYAN + f"Enter your token: ")
-        get_friends_list(token)
+        friends = get_friends_list_user(token)
+        print(friends)
         input("Press enter to return to the main menu")
     elif choice == '2':
         clear()
@@ -281,21 +430,64 @@ while True:
                 change_custom_status(encoded_str, replacements, token)
                 input("Press enter to return to the main menu")
             elif choice_page_2 == '2':
-                clear()
-                choice_settings = input(Fore.CYAN + f'Enter your choice (1 - kali, 2 - windows): ')
-                if choice_settings == '1':
-                    with open('config.txt', 'w') as f:
-                        f.write('kali')
-                elif choice_settings == '2':
-                    with open('config.txt', 'w') as f:
-                        f.write('windows')
-                else:
-                    print('Invalid choice')
+                bot_token = input(Fore.CYAN + f'Enter your token: ')
+                boost_count = input(Fore.CYAN + f'Enter boost count: ')
+                server_id = input(Fore.CYAN + f'Enter your server id: ')
+                url = f'https://discord.com/api/v9/guilds/{server_id}/premium/subscriptions'
+
+                headers = {
+                    'Authorization': f'{bot_token}',
+                    'Content-Type': 'application/json',
+                }
+
+                for _ in range(int(boost_count)):
+                    time.sleep(0.5)
+                    response = requests.post(url, headers=headers)
+
+                    if response.status_code in [200, 201]:
+                        print(f'Server boosted successfully!')
+                    else:
+                        print(f'Failed to boost server. Status code: {response.status_code}')
+                        print(response.text)
+                    continue
+            elif choice_page_2 == '4':
+                bot_token = input(Fore.CYAN + f'Enter your token: ')
+                server_id = input(Fore.CYAN + f'Enter your server id: ')
+                leaver(bot_token, server_id)
+                input("Press enter to return to the main menu")
+            elif choice_page_2 == '6':
+                bot_token = input(Fore.CYAN + f'Enter your token: ')
+                server_id = input(Fore.CYAN + f'Enter your server id: ')
+                get_channels_id(server_id, bot_token)
+                input("Press enter to return to the main menu")
+            elif choice_page_2 == '7':
+                bot_token = input(Fore.CYAN + f'Enter your token: ')
+                server_id = input(Fore.CYAN + f'Enter your server id: ')
+                message_content = input(Fore.CYAN + f'What message to send?: ')
+                ids = get_channels_id_sys(server_id, bot_token)
+                send_message_to_channel(bot_token, message_content, ids)
+                input("Press enter to return to the main menu")
+            elif choice_page_2 == '8':
+                bot_token = input(Fore.CYAN + f'Enter your token: ')
+                server_id = input(Fore.CYAN + f'Enter your server id: ')
+                message_content = input(Fore.CYAN + f'What message to send?: ')
+                id = input(Fore.CYAN + f"Enter channel id or channels ids: ")
+                send_message_to_channel(bot_token, message_content, id)
+                input("Press enter to return to the main menu")
+            elif choice_page_2 == '3':
+                token = input(Fore.CYAN + f'Enter your token: ')
+                invite_link = input(Fore.CYAN + f"Enter your invite link (https://discord.gg/example): ")
+                join_server(invite_link, token)
+                input("Press enter to return to the main menu")
+            elif choice_page_2 == '5':
+                token = input(Fore.CYAN + f'Enter your token: ')
+                guilds = get_discord_guilds_user(token)
+                print(guilds)
                 input("Press enter to return to the main menu")
             elif choice_page_2 == '0':
                 break
             else:
-                print("Invalid choice. Please enter a valid option.")
+                print('Invalid choice')
                 input("Press enter to return to the main menu")
     elif choice == '4':
         clear()
