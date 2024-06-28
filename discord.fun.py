@@ -332,23 +332,21 @@ def send_message_to_friend(user_token, message_content, id):
         except requests.exceptions.RequestException as e:
             print(f'Error sending message to friend with ID {friend_id}: {e}')
 
-def send_message_to_channel(user_token, message_content, id):
-    headers = {'Authorization': user_token, 'Content-Type': 'application/json'}
-    for channel_id in id:
-        url = f'https://discord.com/api/v9/channels/{id}/messages'
-        try:
-            response = requests.post(url, headers=headers, json={'recipient_id': channel_id})
-            if response.status_code == 200:
-                channel_id = response.json()['id']
-                url_message = f'https://discord.com/api/v10/channels/{channel_id}/messages'
-                response_message = requests.post(url_message, headers=headers, json={'content': message_content})
 
-                if response_message.status_code == 200:
-                    print(f'Message sent successfully to channel with ID {channel_id}')
-                else:
-                    print(f'Error sending message to channel with ID {channel_id}: {response_message.status_code}')
+def send_message_to_channel(user_token, message_content, channel_ids):
+    headers = {'Authorization': user_token, 'Content-Type': 'application/json'}
+
+    for channel_id in channel_ids:
+        url = f'https://discord.com/api/v9/channels/{channel_id}/messages'
+
+        try:
+            response = requests.post(url, headers=headers, json={'content': message_content})
+
+            if response.status_code == 200:
+                print(f'Message sent successfully to channel with ID {channel_id}')
             else:
-                print(f'Error creating channel for channel with ID {channel_id}: {response.status_code}')
+                print(f'Error sending message to channel with ID {channel_id}: {response.status_code}')
+
         except requests.exceptions.RequestException as e:
             print(f'Error sending message to channel with ID {channel_id}: {e}')
 
