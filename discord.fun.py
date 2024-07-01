@@ -1,10 +1,12 @@
 import base64
-import time
-import requests
 import os
-from colorama import Fore, init
-from random import randint
 import platform
+import time
+from itertools import cycle
+
+import requests
+from colorama import Fore, init
+from lxml.html import fromstring
 
 init()
 
@@ -15,10 +17,6 @@ username = os.getenv("USERNAME")
 if not os.path.exists('config.txt'):
     with open('config.txt', 'w') as f:
         f.write('kali')
-# https://discord.com/api/v9/users/@me request: PATCH https://discord.com/api/v9/users/@me/profile request: PATCH
-# need authorization token
-# 2. bio: "test"
-# 1. global_name: "test"
 
 def menu():
     print(f"""
@@ -61,7 +59,7 @@ def menu_page_2():
                 {Fore.LIGHTWHITE_EX}6 - Get channels in guild
                 {Fore.LIGHTWHITE_EX}7 - Send Message to all channels in guild
                 {Fore.LIGHTWHITE_EX}8 - Send Message to channel or channels in guild
-                {Fore.LIGHTWHITE_EX}9 - idk what here
+                {Fore.LIGHTWHITE_EX}9 - Go to page 3
                 {Fore.LIGHTWHITE_EX}0 - Back to page 1
                 {Fore.RESET}
     """)
@@ -76,16 +74,51 @@ def menu_page_3():
 {Fore.CYAN} |     | |  |\    \     ||     ||  .  \|     ||  ||  |   |     ||  |  |
 {Fore.CYAN} |_____||____|\___|\____| \___/ |__|\_||_____||__||__|    \__,_||__|__|
 {Fore.RESET}
-                {Fore.LIGHTWHITE_EX}1 - test
+                {Fore.LIGHTWHITE_EX}1 - Discord group nuker
+                {Fore.LIGHTWHITE_EX}2 - thread spammer
                 {Fore.LIGHTWHITE_EX}0 - Back to page 2
                 {Fore.RESET}
     """)
+
+
+def get_proxies():
+    url = 'https://sslproxies.org/'
+    response = requests.get(url)
+
+    if response.status_code != 200:
+        raise Exception(f"Failed to retrieve proxies: {response.status_code}")
+
+    parser = fromstring(response.text)
+    proxies = set()
+
+    rows = parser.xpath('//tbody/tr')
+    for i in rows[:10]:
+        if i.xpath('.//td[7][contains(text(),"yes")]'):
+            try:
+                ip = i.xpath('.//td[1]/text()')[0]
+                port = i.xpath('.//td[2]/text()')[0]
+                proxy = f"{ip}:{port}"
+                proxies.add(proxy)
+            except IndexError:
+                continue
+
+    return proxies
+
+
+try:
+    proxies = get_proxies()
+    if len(proxies) >= 2:
+        proxy = proxies.pop()  # Take any proxy from the set
+    else:
+        print("Not enough proxies found.")
+except Exception as e:
+    print(f"Error: {str(e)}")
 
 def get_friends_list(user_token):
     url = "https://discord.com/api/v9/users/@me/relationships"
     headers = {"Authorization": user_token}
 
-    response = requests.get(url, headers=headers)
+    response = requests.get(url, headers=headers, proxies={"http": proxy})
 
     if response.status_code == 200:
         friends = response.json()
@@ -99,7 +132,7 @@ def get_friends_list_user(user_token):
     url = "https://discord.com/api/v9/users/@me/relationships"
     headers = {"Authorization": user_token}
 
-    response = requests.get(url, headers=headers)
+    response = requests.get(url, headers=headers, proxies={"http": proxy})
 
     if response.status_code == 200:
         friends = response.json()
@@ -114,7 +147,7 @@ def get_discord_guilds(token):
         "Authorization": f"{token}"
     }
 
-    response = requests.get(url, headers=headers)
+    response = requests.get(url, headers=headers, proxies={"http": proxy})
 
     if response.status_code == 200:
         guilds = response.json()
@@ -129,7 +162,7 @@ def get_discord_guilds_user(token):
         "Authorization": f"{token}"
     }
 
-    response = requests.get(url, headers=headers)
+    response = requests.get(url, headers=headers, proxies={"http": proxy})
 
     if response.status_code == 200:
         guilds = response.json()
@@ -138,6 +171,52 @@ def get_discord_guilds_user(token):
         print(f"Failed to fetch guilds: {response.status_code}")
         return []
 
+def send_message_group(channel_id, message_content, discord_token, proxyg):
+    url = f'https://discord.com/api/v9/channels/{channel_id}/messages'
+    headers = {
+        'Authorization': f'{discord_token}',
+        'Content-Type': 'application/json'
+    }
+    payload = {
+        'content': message_content
+    }
+
+    response = requests.post(url, headers=headers, json=payload, proxies={"http": proxyg})
+
+    if response.status_code == 200:
+        print(f'Send message successfully to ID {channel_id}')
+    elif response.status_code == 429:  # Rate limit exceeded
+        retry_after = response.json().get('retry_after', 1)
+        print(f'Rate limit. Retry after {retry_after} seconds.')
+        time.sleep(retry_after)
+        send_message_group(channel_id, message_content, discord_token, proxyg)
+    else:
+        print(f'Error to ID {channel_id}: {response.status_code}')
+        print(f"Response: {response.json()}")
+
+def change_name_group(channel_id, message_content, discord_token, proxyg):
+    url = f'https://discord.com/api/v9/channels/{channel_id}'
+    headers = {
+        'Authorization': f'{discord_token}',
+        'Content-Type': 'application/json'
+    }
+    payload = {
+        'name': message_content
+    }
+
+    response = requests.patch(url, headers=headers, json=payload, proxies={"http": proxyg})
+
+    if response.status_code == 200:
+        print(f'Change group name request successfully send to ID {channel_id}')
+    elif response.status_code == 429:  # Rate limit exceeded
+        retry_after = response.json().get('retry_after', 1)
+        print(f'Rate limit. Retry after {retry_after} seconds.')
+        time.sleep(retry_after)
+        change_name_group(channel_id, message_content, discord_token, proxyg)
+    else:
+        print(f'Error to id {channel_id}: {response.status_code}')
+        print(f"Response: {response.json()}")
+
 def change_bio(user_token, bio):
     request_url = "https://discord.com/api/v9/users/@me/profile"
     payload = {
@@ -145,7 +224,7 @@ def change_bio(user_token, bio):
     }
     headers = {"Content-Type": "application/json", "Authorization": user_token}
 
-    response = requests.patch(request_url, json=payload, headers=headers)
+    response = requests.patch(request_url, json=payload, headers=headers, proxies={"http": proxy})
 
     if response.status_code == 200:
         print("Successfully changed bio")
@@ -163,7 +242,7 @@ def change_display_name(user_token, display_name):
     }
     headers = {"Content-Type": "application/json", "Authorization": user_token}
 
-    response = requests.patch(request_url, json=payload, headers=headers)
+    response = requests.patch(request_url, json=payload, headers=headers, proxies={"http": proxy})
 
     if response.status_code == 200:
         print("Successfully changed display name")
@@ -174,6 +253,47 @@ def change_display_name(user_token, display_name):
     else:
         print(f"Failed to change display name: {response.status_code} {response.text}")
 
+def thread_spammer(token, channel_id, message_id, thread_name, proxyg):
+    global thread_data
+    request_url = f'https://discord.com/api/v9/channels/{channel_id}/messages/{message_id}/threads'
+    headers = {
+        'Authorization': f'{token}',
+        'Content-Type': 'application/json'
+    }
+    payload = {
+        'name': thread_name
+    }
+    response = requests.post(request_url, headers=headers, json=payload, proxies={"http": proxyg})
+
+    if response.status_code == 201:
+        thread_data = response.json()
+        print("Successfully created thread")
+        print(f"Thread Channel ID: {thread_data['id']}")
+    elif response.status_code == 429:  # Rate limit exceeded
+        retry_after = response.json().get('retry_after', 1)
+        print(f'Rate limit, retry after {retry_after} seconds.')
+        time.sleep(retry_after)
+        thread_spammer(token, channel_id, message_id, thread_name, proxyg)
+    else:
+        print("Error")
+        print(response.json())
+    request_url = f'https://discord.com/api/v9/channels/{thread_data["id"]}'
+    headers = {
+        'Authorization': f'{token}',
+        'Content-Type': 'application/json'
+    }
+    response = requests.delete(request_url, headers=headers)
+    if response.status_code == 200:
+        print("Successfully delete the thread")
+    elif response.status_code == 429:  # Rate limit exceeded
+        retry_after = response.json().get('retry_after', 1)
+        print(f'Rate limit, retry after {retry_after} seconds.')
+        time.sleep(retry_after)
+        thread_spammer(token, channel_id, message_id, thread_name, proxyg)
+    else:
+        print("Error")
+        print(response.json())
+
 def change_pronouns(user_token, pronouns):
     request_url = "https://discord.com/api/v9/users/@me/profile"
     payload = {
@@ -181,7 +301,7 @@ def change_pronouns(user_token, pronouns):
     }
     headers = {"Content-Type": "application/json", "Authorization": user_token}
 
-    response = requests.patch(request_url, json=payload, headers=headers)
+    response = requests.patch(request_url, json=payload, headers=headers, proxies={"http": proxy})
 
     if response.status_code == 200:
         print("Successfully changed pronouns")
@@ -200,7 +320,7 @@ def change_username(username, password, token):
     }
     headers = {"Content-Type": "application/json", "Authorization": token}
 
-    response = requests.patch(request_url, json=payload, headers=headers)
+    response = requests.patch(request_url, json=payload, headers=headers, proxies={"http": proxy})
 
     if response.status_code == 200:
         print("Successfully changed pronouns")
@@ -224,7 +344,7 @@ def get_token(email, password):
     }
     headers = {"Content-Type": "application/json"}
 
-    response = requests.post(request_url, json=payload, headers=headers)
+    response = requests.post(request_url, json=payload, headers=headers, proxies={"http": proxy})
 
     if response.status_code == 200:
         token_data = response.json()
@@ -258,7 +378,7 @@ def change_custom_status(encoded_str, replacements, token):
     }
     headers = {"Content-Type": "application/json", 'Authorization': token}
 
-    response = requests.patch(request_url, json=payload, headers=headers)
+    response = requests.patch(request_url, json=payload, headers=headers, proxies={"http": proxy})
 
     if response.status_code == 200:
         print("Changed custom status successfully")
@@ -273,7 +393,7 @@ def get_channels_id(guild_id, token):
         'Content-Type': 'application/json',
     }
 
-    response = requests.get(f'https://discord.com/api/v10/guilds/{guild_id}/channels', headers=headers)
+    response = requests.get(f'https://discord.com/api/v10/guilds/{guild_id}/channels', headers=headers, proxies={"http": proxy})
 
     if response.status_code == 200:
         channels = response.json()
@@ -288,7 +408,7 @@ def get_channels_id_sys(guild_id, token):
         'Content-Type': 'application/json',
     }
 
-    response = requests.get(f'https://discord.com/api/v10/guilds/{guild_id}/channels', headers=headers)
+    response = requests.get(f'https://discord.com/api/v10/guilds/{guild_id}/channels', headers=headers, proxies={"http": proxy})
 
     if response.status_code == 200:
         channels = response.json()
@@ -304,7 +424,7 @@ def join_server(invite_link, USER_TOKEN):
     # Извлечение кода приглашения из ссылки
     invite_code = invite_link.split('/')[-1]
     url = f'https://discord.com/api/v9/invites/{invite_code}'
-    response = requests.post(url, headers=HEADERS)
+    response = requests.post(url, headers=HEADERS, proxies={"http": proxy})
     if response.status_code == 200:
         print(f'Successfully joined server with invite code {invite_code}')
     elif response.status_code == 400:
@@ -315,13 +435,16 @@ def send_message_to_friend(user_token, message_content, id):
     headers = {'Authorization': user_token, 'Content-Type': 'application/json'}
 
     for friend_id in id:
+        proxies = get_proxies()
+        proxy_pool = cycle(proxies)
         url = f'https://discord.com/api/v10/users/@me/channels'
         try:
-            response = requests.post(url, headers=headers, json={'recipient_id': friend_id})
+            proxy = next(proxy_pool)
+            response = requests.post(url, headers=headers, json={'recipient_id': friend_id}, proxies={"http": proxy})
             if response.status_code == 200:
                 channel_id = response.json()['id']
                 url_message = f'https://discord.com/api/v10/channels/{channel_id}/messages'
-                response_message = requests.post(url_message, headers=headers, json={'content': message_content})
+                response_message = requests.post(url_message, headers=headers, json={'content': message_content}, proxies={"http": proxy})
 
                 if response_message.status_code == 200:
                     print(f'Message sent successfully to friend with ID {friend_id}')
@@ -335,12 +458,14 @@ def send_message_to_friend(user_token, message_content, id):
 
 def send_message_to_channel(user_token, message_content, channel_ids):
     headers = {'Authorization': user_token, 'Content-Type': 'application/json'}
-
+    proxies = get_proxies()
+    proxy_pool = cycle(proxies)
     for channel_id in channel_ids:
+        proxy = next(proxy_pool)
         url = f'https://discord.com/api/v9/channels/{channel_id}/messages'
-
         try:
-            response = requests.post(url, headers=headers, json={'content': message_content})
+
+            response = requests.post(url, headers=headers, json={'content': message_content}, proxies={"http": proxy})
 
             if response.status_code == 200:
                 print(f'Message sent successfully to channel with ID {channel_id}')
@@ -361,7 +486,7 @@ def leaver(token, guild_id):
     }
 
     # Выполнение DELETE-запроса для выхода из сервера
-    response = requests.delete(url, headers=headers)
+    response = requests.delete(url, headers=headers, proxies={"http": proxy})
 
     # Проверка результата
     if response.status_code == 204:
@@ -439,8 +564,11 @@ while True:
                 }
 
                 for _ in range(int(boost_count)):
+                    proxies = get_proxies()
+                    proxy_pool = cycle(proxies)
+                    proxy = next(proxy_pool)
                     time.sleep(0.5)
-                    response = requests.post(url, headers=headers)
+                    response = requests.post(url, headers=headers, proxies={"http": proxy})
 
                     if response.status_code in [200, 201]:
                         print(f'Server boosted successfully!')
@@ -472,6 +600,42 @@ while True:
                 id = input(Fore.CYAN + f"Enter channel id or channels ids: ")
                 send_message_to_channel(bot_token, message_content, id)
                 input("Press enter to return to the main menu")
+            elif choice_page_2 == '9':
+                while True:
+                    clear()
+                    menu_page_3()
+                    choice_page_3 = input(setting)
+                    if choice_page_3 == "1":
+                        bot_token = input(Fore.CYAN + f'Enter your token: ')
+                        group_id = input(Fore.CYAN + f'Enter your group id: ')
+                        isenabled = True
+                        proxies = get_proxies()
+                        proxy_pool = cycle(proxies)
+
+                        message = "﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽"
+                        name = "﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽"
+                        while isenabled:
+                            proxy = next(proxy_pool)
+                            send_message_group(group_id, message, bot_token, proxy)
+                            change_name_group(group_id, name, bot_token, proxy)
+                        input("Press enter to return to the main menu")
+                    elif choice_page_3 == "2":
+                        token = input(Fore.CYAN + f"Enter your token: ")
+                        channel_id = input(Fore.CYAN + f"Enter the channel ID: ")
+                        message_id = input(Fore.CYAN + f"Enter the message ID: ")
+                        thread_name = input(Fore.CYAN + f"Enter the thread name: ")
+                        isenabled = True
+                        proxies = get_proxies()
+                        proxy_pool = cycle(proxies)
+
+                        message = "﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽"
+                        name = "﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽"
+                        while isenabled:
+                            proxy = next(proxy_pool)
+                            thread_spammer(token, channel_id, message_id, thread_name, proxy)
+                        input("Press enter to return to the main menu")
+                    elif choice_page_3 == '0':
+                        break
             elif choice_page_2 == '3':
                 token = input(Fore.CYAN + f'Enter your token: ')
                 invite_link = input(Fore.CYAN + f"Enter your invite link (https://discord.gg/example): ")
