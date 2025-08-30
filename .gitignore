@@ -1,0 +1,4 @@
+.idea # pycharm
+.vscode # vscode
+.venv # venv
+/src/config.txt
