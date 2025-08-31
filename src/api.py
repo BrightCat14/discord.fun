@@ -3,7 +3,7 @@ import time
 
 import requests
 
-from src import cli
+from src import cli, utils
 
 BASE_URL = 'https://discord.com/api/v10'
 
@@ -18,14 +18,14 @@ def typer(channel_id, token):
 
     response = requests.post(url=request, headers=headers)
     if response.status_code == 204:
-        print("Successfully send request to type")
+        utils.log("Successfully send request to type")
     elif response.status_code == 429:
         retry_after = response.json().get('retry_after', 1)
-        print(f'Rate limit, retry after {retry_after} seconds.')
+        utils.log(f'Rate limit, retry after {retry_after} seconds.')
         time.sleep(retry_after)
         typer(channel_id, token)
     else:
-        print(f"Error: {response.status_code}")
+        utils.log(f"Error: {response.status_code}")
 
 
 def get_friends_list(token):
@@ -42,7 +42,7 @@ def get_friends_list(token):
         friend_ids = [friend["id"] for friend in friends]
         return friend_ids
     else:
-        print(f"Failed to retrieve friends list: {response.status_code}")
+        utils.log(f"Failed to retrieve friends list: {response.status_code}")
         return []
 
 
@@ -59,7 +59,7 @@ def get_friends_list_user(token):
         friends = response.json()
         return '\n'.join([f"{friend['id']} - {friend['name']}" for friend in friends])
     else:
-        print(f"Failed to retrieve friends list: {response.status_code}")
+        utils.log(f"Failed to retrieve friends list: {response.status_code}")
         return []
 
 
@@ -75,7 +75,7 @@ def get_discord_guilds(token):
         guilds = response.json()
         return [(guild['id'], guild['name']) for guild in guilds]
     else:
-        print(f"Failed to fetch guilds: {response.status_code}")
+        utils.log(f"Failed to fetch guilds: {response.status_code}")
         return []
 
 
@@ -92,7 +92,7 @@ def get_discord_guilds_user(token):
         guilds = response.json()
         return '\n'.join([f"{guild['id']} - {guild['name']}" for guild in guilds])
     else:
-        print(f"Failed to fetch guilds: {response.status_code}")
+        utils.log(f"Failed to fetch guilds: {response.status_code}")
         return []
 
 
@@ -109,15 +109,15 @@ def send_message_group(channel_id, message_content, discord_token):
     response = requests.post(url, headers=headers, json=payload)
 
     if response.status_code == 200:
-        print(f'Send message successfully to ID {channel_id}')
+        utils.log(f'Send message successfully to ID {channel_id}')
     elif response.status_code == 429:
         retry_after = response.json().get('retry_after', 1)
-        print(f'Rate limit. Retry after {retry_after} seconds.')
+        utils.log(f'Rate limit. Retry after {retry_after} seconds.')
         time.sleep(retry_after)
         send_message_group(channel_id, message_content, discord_token)
     else:
-        print(f'Error to ID {channel_id}: {response.status_code}')
-        print(f"Response: {response.json()}")
+        utils.log(f'Error to ID {channel_id}: {response.status_code}')
+        utils.log(f"Response: {response.json()}")
 
 
 def change_name_group(channel_id, message_content, discord_token):
@@ -134,16 +134,16 @@ def change_name_group(channel_id, message_content, discord_token):
     response = requests.patch(url, headers=headers, json=payload)
 
     if response.status_code == 200:
-        print(f'Change group name request successfully send to ID {channel_id}')
+        utils.log(f'Change group name request successfully send to ID {channel_id}')
     elif response.status_code == 429:
         retry_after = response.json().get('retry_after', 1)
-        print(f'Rate limit. Retry after {retry_after} seconds.')
+        utils.log(f'Rate limit. Retry after {retry_after} seconds.')
         time.sleep(retry_after)
 
         change_name_group(channel_id, message_content, discord_token)
     else:
-        print(f'Error to id {channel_id}: {response.status_code}')
-        print(f"Response: {response.json()}")
+        utils.log(f'Error to id {channel_id}: {response.status_code}')
+        utils.log(f"Response: {response.json()}")
 
 
 def change_bio(token, bio):
@@ -159,13 +159,13 @@ def change_bio(token, bio):
     response = requests.patch(request_url, json=payload, headers=headers)
 
     if response.status_code == 200:
-        print("Successfully changed bio")
+        utils.log("Successfully changed bio")
     elif response.status_code == 401:
-        print("Failed to change bio: Unauthorized. Please check your token.")
+        utils.log("Failed to change bio: Unauthorized. Please check your token.")
     elif response.status_code == 400:
-        print("Captcha error")
+        utils.log("Captcha error")
     else:
-        print(f"Failed to change bio: {response.status_code} {response.text}")
+        utils.log(f"Failed to change bio: {response.status_code} {response.text}")
 
 
 def change_display_name(token, display_name):
@@ -182,13 +182,13 @@ def change_display_name(token, display_name):
     response = requests.patch(request_url, json=payload, headers=headers)
 
     if response.status_code == 200:
-        print("Successfully changed display name")
+        utils.log("Successfully changed display name")
     elif response.status_code == 401:
-        print("Failed to change display name: Unauthorized. Please check your token.")
+        utils.log("Failed to change display name: Unauthorized. Please check your token.")
     elif response.status_code == 400:
-        print("Captcha error")
+        utils.log("Captcha error")
     else:
-        print(f"Failed to change display name: {response.status_code} {response.text}")
+        utils.log(f"Failed to change display name: {response.status_code} {response.text}")
 
 thread_data = None
 def thread_spammer(token, channel_id, message_id, thread_name):
@@ -207,15 +207,15 @@ def thread_spammer(token, channel_id, message_id, thread_name):
 
     if response.status_code == 201:
         thread_data = response.json()
-        print("Successfully created thread")
-        print(f"Thread Channel ID: {thread_data['id']}")
+        utils.log("Successfully created thread")
+        utils.log(f"Thread Channel ID: {thread_data['id']}")
     elif response.status_code == 429:
         retry_after = response.json().get('retry_after', 1)
-        print(f'Rate limit, retry after {retry_after} seconds.')
+        utils.log(f'Rate limit, retry after {retry_after} seconds.')
         time.sleep(retry_after)
         thread_spammer(token, channel_id, message_id, thread_name)
     else:
-        print("Error: " + response.json())
+        utils.log("Error: " + response.json())
     request_url = BASE_URL + f"/channels/{thread_data['id']}"
     headers = {
         'Authorization': f'{token}',
@@ -224,15 +224,15 @@ def thread_spammer(token, channel_id, message_id, thread_name):
     }
     response = requests.delete(request_url, headers=headers)
     if response.status_code == 200:
-        print("Successfully delete the thread")
+        utils.log("Successfully delete the thread")
     elif response.status_code == 429:
         retry_after = response.json().get('retry_after', 1)
-        print(f'Rate limit, retry after {retry_after} seconds.')
+        utils.log(f'Rate limit, retry after {retry_after} seconds.')
         time.sleep(retry_after)
 
         thread_spammer(token, channel_id, message_id, thread_name)
     else:
-        print("Error: " + response.json())
+        utils.log("Error: " + response.json())
 
 
 def print_info_user(token):
@@ -246,16 +246,16 @@ def print_info_user(token):
         response = requests.get(request_url, headers=headers)
         response.raise_for_status()  # Raise an HTTPError for bad responses
         user_info = response.json()
-        print("Getting information successfully")
-        print("Display Name:", user_info.get("global_name", "N/A"))
-        print("User Name:", user_info.get("username", "N/A"))
-        print("Bio:", user_info.get("bio", "N/A"))
-        print("Id:", user_info.get("id", "N/A"))
-        print("MFA Enabled:", user_info.get("mfa_enabled", "N/A"))
-        print("Email:", user_info.get("email", "N/A"))
-        print("Phone:", user_info.get("phone", "N/A"))
+        utils.log("Getting information successfully")
+        utils.log("Display Name:", user_info.get("global_name", "N/A"))
+        utils.log("User Name:", user_info.get("username", "N/A"))
+        utils.log("Bio:", user_info.get("bio", "N/A"))
+        utils.log("Id:", user_info.get("id", "N/A"))
+        utils.log("MFA Enabled:", user_info.get("mfa_enabled", "N/A"))
+        utils.log("Email:", user_info.get("email", "N/A"))
+        utils.log("Phone:", user_info.get("phone", "N/A"))
     except requests.exceptions.RequestException as e:
-        print(f"An error occurred: {e}")
+        utils.log(f"An error occurred: {e}")
 
 
 def change_pronouns(token, pronouns):
@@ -272,13 +272,13 @@ def change_pronouns(token, pronouns):
     response = requests.patch(request_url, json=payload, headers=headers)
 
     if response.status_code == 200:
-        print("Successfully changed pronouns")
+        utils.log("Successfully changed pronouns")
     elif response.status_code == 401:
-        print("Failed to change pronouns: Unauthorized. Please check your token.")
+        utils.log("Failed to change pronouns: Unauthorized. Please check your token.")
     elif response.status_code == 400:
-        print("Captcha error")
+        utils.log("Captcha error")
     else:
-        print(f"Failed to change pronouns: {response.status_code} {response.text}")
+        utils.log(f"Failed to change pronouns: {response.status_code} {response.text}")
 
 
 def change_username(username, password, token):
@@ -296,13 +296,13 @@ def change_username(username, password, token):
     response = requests.patch(request_url, json=payload, headers=headers)
 
     if response.status_code == 200:
-        print("Successfully changed username")
+        utils.log("Successfully changed username")
     elif response.status_code == 401:
-        print("Failed to change username: Unauthorized. Please check your token.")
+        utils.log("Failed to change username: Unauthorized. Please check your token.")
     elif response.status_code == 400:
-        print("Captcha error")
+        utils.log("Captcha error")
     else:
-        print(f"Failed to change username: {response.status_code} {response.text}")
+        utils.log(f"Failed to change username: {response.status_code} {response.text}")
 
 
 def get_token(email, password):
@@ -326,13 +326,13 @@ def get_token(email, password):
         token_data = response.json()
         access_token = token_data.get('token')
         if access_token:
-            print(f"Access token: {access_token}")
+            utils.log(f"Access token: {access_token}")
         else:
-            print("Access token not found in response.")
+            utils.log("Access token not found in response.")
     elif response.status_code == 400:
-        print("Captcha error")
+        utils.log("Captcha error")
     else:
-        print(f"Failed to retrieve access token: {response.status_code} {response.text}")
+        utils.log(f"Failed to retrieve access token: {response.status_code} {response.text}")
 
 
 def change_custom_status(encoded_str, replacements, token):
@@ -358,11 +358,11 @@ def change_custom_status(encoded_str, replacements, token):
     response = requests.patch(request_url, json=payload, headers=headers)
 
     if response.status_code == 200:
-        print("Changed custom status successfully")
+        utils.log("Changed custom status successfully")
     elif response.status_code == 400:
-        print("Captcha error")
+        utils.log("Captcha error")
     else:
-        print(f"Failed to retrieve access token: {response.status_code} {response.text}")
+        utils.log(f"Failed to retrieve access token: {response.status_code} {response.text}")
 
 
 def get_list_channels_id(guild_id, token):
@@ -378,7 +378,7 @@ def get_list_channels_id(guild_id, token):
         channels = response.json()
         return '\n'.join([f"{channel['id']} - {channel['name']}" for channel in channels])
     else:
-        print(f'Failed to fetch channels: {response.status_code} - {response.text}')
+        utils.log(f'Failed to fetch channels: {response.status_code} - {response.text}')
 
 
 def sys_get_channels_id(guild_id, token):
@@ -395,7 +395,7 @@ def sys_get_channels_id(guild_id, token):
         channels_id = [channel["id"] for channel in channels]
         return channels_id
     else:
-        print(f'Failed to fetch channels: {response.status_code} - {response.text}')
+        utils.log(f'Failed to fetch channels: {response.status_code} - {response.text}')
 
 
 def join_server(invite_link, token):
@@ -408,11 +408,11 @@ def join_server(invite_link, token):
     url = BASE_URL + f"/invites/{invite_code}"
     response = requests.post(url, headers=headers)
     if response.status_code == 200:
-        print(f'Successfully joined server with invite code {invite_code}')
+        utils.log(f'Successfully joined server with invite code {invite_code}')
     elif response.status_code == 400:
-        print("Captcha Error")
+        utils.log("Captcha Error")
     else:
-        print(f'Failed to join server: {response.status_code} - {response.text}')
+        utils.log(f'Failed to join server: {response.status_code} - {response.text}')
 
 
 def send_message_to_friend(token, message_content, identifier):
@@ -433,13 +433,13 @@ def send_message_to_friend(token, message_content, identifier):
                 response_message = requests.post(url_message, headers=headers, json={'content': message_content})
 
                 if response_message.status_code == 200:
-                    print(f'Message sent successfully to friend with ID {friend_id}')
+                    utils.log(f'Message sent successfully to friend with ID {friend_id}')
                 else:
-                    print(f'Error sending message to friend with ID {friend_id}: {response_message.status_code}')
+                    utils.log(f'Error sending message to friend with ID {friend_id}: {response_message.status_code}')
             else:
-                print(f'Error creating channel for friend with ID {friend_id}: {response.status_code}')
+                utils.log(f'Error creating channel for friend with ID {friend_id}: {response.status_code}')
         except requests.exceptions.RequestException as e:
-            print(f'Error sending message to friend with ID {friend_id}: {e}')
+            utils.log(f'Error sending message to friend with ID {friend_id}: {e}')
 
 
 def send_message_to_channel(token, message_content, channel_ids):
@@ -456,12 +456,12 @@ def send_message_to_channel(token, message_content, channel_ids):
             response = requests.post(url, headers=headers, json={'content': message_content})
 
             if response.status_code == 200:
-                print(f'Message sent successfully to channel with ID {channel_id}')
+                utils.log(f'Message sent successfully to channel with ID {channel_id}')
             else:
-                print(f'Error sending message to channel with ID {channel_id}: {response.status_code}')
+                utils.log(f'Error sending message to channel with ID {channel_id}: {response.status_code}')
 
         except requests.exceptions.RequestException as e:
-            print(f'Error sending message to channel with ID {channel_id}: {e}')
+            utils.log(f'Error sending message to channel with ID {channel_id}: {e}')
 
 
 def get_discord_group_dms(token):
@@ -497,23 +497,23 @@ def hypesquad(token, house_id):
         response.raise_for_status()  # Raise an exception for HTTP errors
 
         if response.status_code == 204:
-            print("Successfully changed the HypeSquad badge")
+            utils.log("Successfully changed the HypeSquad badge")
         else:
-            print(f"Error {response.status_code}: {response.text}")
+            utils.log(f"Error {response.status_code}: {response.text}")
     except requests.RequestException as e:
-        print(f"An error occurred: {e}")
+        utils.log(f"An error occurred: {e}")
 
 
 def print_group_dms(group_dms):
     for dm in group_dms:
-        print(f'Group DM ID: {dm["id"]}')
-        print(f'Name: {dm["name"]}')
-        print(f'Owner ID: {dm["owner_id"]}')
-        print('Recipients:')
+        utils.log(f'Group DM ID: {dm["id"]}')
+        utils.log(f'Name: {dm["name"]}')
+        utils.log(f'Owner ID: {dm["owner_id"]}')
+        utils.log('Recipients:')
         for recipient in dm['recipients']:
-            print(
+            utils.log(
                 f'  - Username: {recipient["username"]}, Global Name: {recipient.get("global_name")}, ID: {recipient["id"]}')
-        print('-' * 40)
+        utils.log('-' * 40)
 
 
 def send_message_to_group(token, message, channel_id):
@@ -530,9 +530,9 @@ def send_message_to_group(token, message, channel_id):
     response = requests.post(url, headers=headers, json=payload)
 
     if response.status_code == 200 or response.status_code == 201:
-        print(f"Message sent to channel ID {channel_id}")
+        utils.log(f"Message sent to channel ID {channel_id}")
     else:
-        print(f"Failed to send message to channel ID {channel_id}: {response.status_code} {response.text}")
+        utils.log(f"Failed to send message to channel ID {channel_id}: {response.status_code} {response.text}")
 
 
 def discord_nitro_expire(token):
@@ -551,12 +551,12 @@ def discord_nitro_expire(token):
             for subscription in subscriptions:
                 current_period_start = cli.convert_iso_to_readable(subscription['current_period_start'])
                 current_period_end = cli.convert_iso_to_readable(subscription['current_period_end'])
-                print(f"Current Period Start: {current_period_start}")
-                print(f"Current Period End: {current_period_end}")
+                utils.log(f"Current Period Start: {current_period_start}")
+                utils.log(f"Current Period End: {current_period_end}")
         else:
-            print("No active subscriptions found.")
+            utils.log("No active subscriptions found.")
     else:
-        print(f"Error {response.status_code}: {response.text}")
+        utils.log(f"Error {response.status_code}: {response.text}")
 
 
 def get_sessions(token):
@@ -578,15 +578,15 @@ def get_sessions(token):
                     os = client_info.get('os', 'N/A')
                     platform = client_info.get('platform', 'N/A')
                     location = client_info.get('location', 'N/A')
-                    print(f"\nOS: {os}")
-                    print(f"PLATFORM: {platform}")
-                    print(f"LOCATION: {location}")
+                    utils.log(f"\nOS: {os}")
+                    utils.log(f"PLATFORM: {platform}")
+                    utils.log(f"LOCATION: {location}")
             else:
-                print("No sessions found.")
+                utils.log("No sessions found.")
         else:
-            print(f"Error {response.status_code}: {response.text}")
+            utils.log(f"Error {response.status_code}: {response.text}")
     except requests.RequestException as e:
-        print(f"An error occurred: {e}")
+        utils.log(f"An error occurred: {e}")
 
 
 def country_code_by(token):
@@ -605,13 +605,13 @@ def country_code_by(token):
             data = response.json()
             if 'country_code' in data:
                 country_code = data['country_code']
-                print(f"Country code: {country_code}")
+                utils.log(f"Country code: {country_code}")
             else:
-                print("Country code not found in response.")
+                utils.log("Country code not found in response.")
         else:
-            print(f"Error {response.status_code}: {response.text}")
+            utils.log(f"Error {response.status_code}: {response.text}")
     except requests.RequestException as e:
-        print(f"An error occurred: {e}")
+        utils.log(f"An error occurred: {e}")
 
 
 def leaver(token, guild_id):
@@ -625,9 +625,9 @@ def leaver(token, guild_id):
     response = requests.delete(url, headers=headers)
 
     if response.status_code == 204:
-        print('Successfully left the server.')
+        utils.log('Successfully left the server.')
     else:
-        print(f'Failed to leave the server. Status code: {response.status_code}, Response: {response.text}')
+        utils.log(f'Failed to leave the server. Status code: {response.status_code}, Response: {response.text}')
 
 
 def create_webhook(token, channel_id, webhook_name):
@@ -647,10 +647,10 @@ def create_webhook(token, channel_id, webhook_name):
 
     if response.status_code == 200:
         webhook_info = response.json()
-        print(f"Webhook created: {webhook_info['url']}")
+        utils.log(f"Webhook created: {webhook_info['url']}")
     else:
-        print(f"Error: {response.status_code}")
-        print(response.json())
+        utils.log(f"Error: {response.status_code}")
+        utils.log(response.json())
 
 
 def delete_channels(guild_id, token):
@@ -671,11 +671,11 @@ def delete_channels(guild_id, token):
                 # Delete channel
 
                 requests.delete(f'{BASE_URL}/channels/{channel_id}', headers=headers)
-                print(f'Channel {channel["name"]} deleted.')
+                utils.log(f'Channel {channel["name"]} deleted.')
             except Exception as e:
-                print(f'Failed to delete channel {channel["name"]}: {e}')
+                utils.log(f'Failed to delete channel {channel["name"]}: {e}')
     else:
-        print('Failed to retrieve channels:', response.json())
+        utils.log('Failed to retrieve channels:', response.json())
 
 
 def delete_roles(guild_id, token):
@@ -696,11 +696,11 @@ def delete_roles(guild_id, token):
                     role_id = role['id']
                     # Delete role
                     requests.delete(f'{BASE_URL}/guilds/{guild_id}/roles/{role_id}', headers=headers)
-                    print(f'Role {role["name"]} deleted.')
+                    utils.log(f'Role {role["name"]} deleted.')
                 except Exception as e:
-                    print(f'Failed to delete role {role["name"]}: {e}')
+                    utils.log(f'Failed to delete role {role["name"]}: {e}')
     else:
-        print('Failed to retrieve roles:', response.json())
+        utils.log('Failed to retrieve roles:', response.json())
 
 
 def ban_members(guild_id, token):
@@ -722,11 +722,11 @@ def ban_members(guild_id, token):
                     # Ban member
 
                     requests.put(f'{BASE_URL}/guilds/{guild_id}/bans/{user_id}', headers=headers)
-                    print(f'{member["user"]["username"]} banned.')
+                    utils.log(f'{member["user"]["username"]} banned.')
                 except Exception as e:
-                    print(f'Failed to ban {member["user"]["username"]}: {e}')
+                    utils.log(f'Failed to ban {member["user"]["username"]}: {e}')
     else:
-        print('Failed to retrieve members:', response.json())
+        utils.log('Failed to retrieve members:', response.json())
 
 
 def change_logo_guild(image_data, token, guild_id):
@@ -749,9 +749,9 @@ def change_logo_guild(image_data, token, guild_id):
         json=json_data
     )
     if response.status_code == 200:
-        print('Server icon changed successfully.')
+        utils.log('Server icon changed successfully.')
     else:
-        print(f'Failed to change server icon: {response.status_code} - {response.text}')
+        utils.log(f'Failed to change server icon: {response.status_code} - {response.text}')
 
 
 def change_description(description, token, guild_id):
@@ -773,9 +773,9 @@ def change_description(description, token, guild_id):
         json=json_data
     )
     if response.status_code == 200:
-        print(f'Successfully changed server description to {description}.')
+        utils.log(f'Successfully changed server description to {description}.')
     else:
-        print(f'Failed to change server description: {response.status_code} - {response.text}')
+        utils.log(f'Failed to change server description: {response.status_code} - {response.text}')
 
 
 def change_server_name(guild_id, new_name, token):
@@ -793,6 +793,6 @@ def change_server_name(guild_id, new_name, token):
     response = requests.patch(url, headers=headers, json=data)
 
     if response.status_code == 200:
-        print(f'Successfully changed server name to "{new_name}".')
+        utils.log(f'Successfully changed server name to "{new_name}".')
     else:
-        print(f'Failed to change server name: {response.status_code}, {response.json()}')
+        utils.log(f'Failed to change server name: {response.status_code}, {response.json()}')

@@ -3,3 +3,4 @@
 .venv # venv
 /src/config.txt
 /bckps/
+/config.txt

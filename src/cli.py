@@ -18,7 +18,7 @@ def get_return_input():
     return input("Press enter to return to the main menu")
 
 def get_prompt():
-    with open('config.txt', 'r') as f:
+    with open(utils.config_path, 'r') as f:
         theme = f.read().strip()
     if theme == 'kali':
         prompt = f"{Fore.LIGHTGREEN_EX}{utils.username}@kali:{Fore.BLUE}/{utils.folder_name}${Fore.LIGHTGREEN_EX} "
