@@ -13,12 +13,12 @@
 > **Note:** This tool is for educational purposes and testing in controlled environments only. Misuse can violate Discord's Terms of Service.
 
 ## Join our community
-[Discord Server](https://discord.gg/4dvb8pmy8t)
+[Discord Server](https://discord.gg/84ajU8Heb2)
 
 ## Installation
 1. Clone the repo:  
    ```bash
-   git clone https://github.com/yourusername/discord.fun.git
+   git clone https://github.com/BrightCat14/discord.fun.git
     ```
 
 2. Install dependencies:
@@ -29,7 +29,7 @@
 3. Run the tool:
 
    ```bash
-   python main.py
+   python -m src.main
    ```
 
 ## Disclaimer
