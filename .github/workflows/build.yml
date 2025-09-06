@@ -28,15 +28,13 @@ jobs:
         pip install -r requirements.txt
         pip install pyinstaller
 
-    - name: Build executable
-      run: |
-        if [[ "${{ matrix.os }}" == "windows-latest" ]]; then
-          pyinstaller --onefile run.py --icon=resources/icon.ico
-          echo "Windows exe built"
-        else
-          pyinstaller --onefile run.py --icon=resources/icon.png
-          echo "Linux elf built"
-        fi
+    - name: Build Linux ELF
+      if: matrix.os == 'ubuntu-latest'
+      run: pyinstaller --onefile run.py --icon=resources/icon.png
+
+    - name: Build Windows EXE
+      if: matrix.os == 'windows-latest'
+      run: pyinstaller --onefile run.py --icon=resources/icon.ico
 
     - name: Upload artifacts
       uses: actions/upload-artifact@v4.6.2
