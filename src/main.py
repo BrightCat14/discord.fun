@@ -1,11 +1,12 @@
 import os
 import platform
 import traceback
+import sys
 
 from colorama import Fore
 
 if not os.getenv("TERM") and platform.system() == "Linux":
-    os.environ.setdefault("TERM", "dumb")
+    os.environ.setdefault("TERM", "dumb") # for correct work of colorama, sorry for stupid fix
 
 # for time
 import time
@@ -67,7 +68,7 @@ def main():
                     _type = cli.get_input(f"Enter type of custom status (online, idle, dnd, invisible): ")
                     text = cli.get_input(f"Enter text of custom status: ")
 
-                    encoded_str = r"WicKCAoGb25saW5lEhcKDFRoaW5raW5n8J+klCGAfH9bkAEAABoCCAE="
+                    encoded_str = r"WicKCAoGb25saW5lEhcKDFRoaW5raW5n8J+klCGAfH9bkAEAABoCCAE=" # magic string, please dont change it
 
                     replacements = {
                         "online": _type,
@@ -384,7 +385,7 @@ def main():
             username = cli.get_input(f"Enter username to change")
             api.change_username(username, password, token)
             cli.get_return_input()
-        elif choice == '0': exit(0)
+        elif choice == '0': sys.exit(0)
         else:
             utils.log("Invalid choice. Please enter a valid option.")
             cli.get_return_input()

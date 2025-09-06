@@ -1,15 +1,18 @@
 import random
 
+import ua_generator
 from colorama import Fore
 
 from src import tabber
 
+# info
 author = "BrightCat14" # akaruineko
 name = "discord.fun"
 vX = "v2"
 version = vX + tabber.separator() + "dev"
 title = name + tabber.space() + version
 
+# hints functionality
 hints = [
     f"You knew that {name} v1 is trash?",
     "Also try VanishCord",
@@ -48,13 +51,13 @@ hints_dev = [
     "Your console screams in binary at night",
     "May contain traces of caffeine and despair",
     "Merge conflicts are your new best friends",
-    "Remember: StackOverflow is watching you",
-    "i used to think i was above arrogance… but ever since i started using arch, i just can’t stop telling everyone i’m superior. send help."
+    "Remember: StackOverflow is watching you"
 ]
 hint_formatted = (Fore.YELLOW + random.choice(hints_dev) + Fore.RESET
                   if any(word in version for word in ["beta", "dev", "alpha", "test"])
                   else Fore.YELLOW + random.choice(hints) + Fore.RESET)
-
+# useful in code
+UA = ua_generator.generate().text
 ICON_URL = f"https://raw.githubusercontent.com/{author}/{name}/refs/heads/{vX}/resources/icon.webp"
 
 if __name__ == "__main__":

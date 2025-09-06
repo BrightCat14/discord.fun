@@ -4,3 +4,10 @@
 /src/config.txt
 /bckps/
 /config.txt
+*.pyc
+*.pyi
+*.pyd
+/main.spec
+/dist
+/build
+/run.spec

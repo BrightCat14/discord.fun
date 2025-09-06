@@ -1,4 +1,3 @@
-# cli like:
 import os
 import platform
 from datetime import datetime
@@ -20,12 +19,14 @@ def get_return_input():
 def get_prompt():
     with open(utils.config_path, 'r') as f:
         theme = f.read().strip()
+
+    prompt = f"{Fore.LIGHTGREEN_EX}{utils.username}@kali:{Fore.BLUE}/{utils.folder_name}${Fore.LIGHTGREEN_EX} "
+    
     if theme == 'kali':
         prompt = f"{Fore.LIGHTGREEN_EX}{utils.username}@kali:{Fore.BLUE}/{utils.folder_name}${Fore.LIGHTGREEN_EX} "
     elif theme == 'windows':
         prompt = f"{utils.current_directory}>"
-    else:
-        prompt = f"{Fore.LIGHTGREEN_EX}{utils.username}@kali:{Fore.BLUE}/{utils.folder_name}$ "
+
     return prompt
 
 def clear_screen():

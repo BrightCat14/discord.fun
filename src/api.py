@@ -3,17 +3,17 @@ import time
 
 import requests
 
-from src import cli, utils
+from src import cli, utils, constants
 
 BASE_URL = 'https://discord.com/api/v10'
 
 def typer(channel_id, token):
-    request = f'https://discord.com/api/v9/channels/{channel_id}/typing'
+    request = f'{BASE_URL}/channels/{channel_id}/typing'
 
     headers = {
         "Content-Type": 'text/html; charset=utf-8',
         "Authorization": token,
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) discord/1.0.9154 Chrome/124.0.6367.243 Electron/30.1.0 Safari/537.36'
+        'User-Agent': constants.UA
     }
 
     response = requests.post(url=request, headers=headers)
@@ -32,7 +32,7 @@ def get_friends_list(token):
     url = BASE_URL + "/users/@me/relationships"
     headers = {
         "Authorization": token,
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) discord/1.0.9154 Chrome/124.0.6367.243 Electron/30.1.0 Safari/537.36'
+        'User-Agent': constants.UA
     }
 
     response = requests.get(url, headers=headers)
@@ -50,7 +50,7 @@ def get_friends_list_user(token):
     url = BASE_URL + "/users/@me/relationships"
     headers = {
         "Authorization": token,
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) discord/1.0.9154 Chrome/124.0.6367.243 Electron/30.1.0 Safari/537.36'
+        'User-Agent': constants.UA
     }
 
     response = requests.get(url, headers=headers)
@@ -83,7 +83,7 @@ def get_discord_guilds_user(token):
     url = BASE_URL + "/users/@me/guilds"
     headers = {
         "Authorization": f"{token}",
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) discord/1.0.9154 Chrome/124.0.6367.243 Electron/30.1.0 Safari/537.36'
+        'User-Agent': constants.UA
     }
 
     response = requests.get(url, headers=headers)
@@ -101,7 +101,7 @@ def send_message_group(channel_id, message_content, discord_token):
     headers = {
         'Authorization': f'{discord_token}',
         'Content-Type': 'application/json',
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) discord/1.0.9154 Chrome/124.0.6367.243 Electron/30.1.0 Safari/537.36'
+        'User-Agent': constants.UA
     }
     payload = {
         'content': message_content
@@ -125,7 +125,7 @@ def change_name_group(channel_id, message_content, discord_token):
     headers = {
         'Authorization': f'{discord_token}',
         'Content-Type': 'application/json',
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) discord/1.0.9154 Chrome/124.0.6367.243 Electron/30.1.0 Safari/537.36'
+        'User-Agent': constants.UA
     }
     payload = {
         'name': message_content
@@ -153,7 +153,7 @@ def change_bio(token, bio):
     }
     headers = {
         "Content-Type": "application/json", "Authorization": token,
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) discord/1.0.9154 Chrome/124.0.6367.243 Electron/30.1.0 Safari/537.36'
+        'User-Agent': constants.UA
     }
 
     response = requests.patch(request_url, json=payload, headers=headers)
@@ -176,7 +176,7 @@ def change_display_name(token, display_name):
     headers = {
         "Content-Type": "application/json",
         "Authorization": token,
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) discord/1.0.9154 Chrome/124.0.6367.243 Electron/30.1.0 Safari/537.36'
+        'User-Agent': constants.UA
     }
 
     response = requests.patch(request_url, json=payload, headers=headers)
@@ -197,7 +197,7 @@ def thread_spammer(token, channel_id, message_id, thread_name):
     headers = {
         'Authorization': f'{token}',
         'Content-Type': 'application/json',
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) discord/1.0.9154 Chrome/124.0.6367.243 Electron/30.1.0 Safari/537.36'
+        'User-Agent': constants.UA
     }
     payload = {
         'name': thread_name
@@ -220,7 +220,7 @@ def thread_spammer(token, channel_id, message_id, thread_name):
     headers = {
         'Authorization': f'{token}',
         'Content-Type': 'application/json',
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) discord/1.0.9154 Chrome/124.0.6367.243 Electron/30.1.0 Safari/537.36'
+        'User-Agent': constants.UA
     }
     response = requests.delete(request_url, headers=headers)
     if response.status_code == 200:
@@ -240,7 +240,7 @@ def print_info_user(token):
     headers = {
         'Authorization': token,
         'Content-Type': 'application/json',
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) discord/1.0.9154 Chrome/124.0.6367.243 Electron/30.1.0 Safari/537.36'
+        'User-Agent': constants.UA
     }
     try:
         response = requests.get(request_url, headers=headers)
@@ -266,7 +266,7 @@ def change_pronouns(token, pronouns):
     headers = {
         "Content-Type": "application/json",
         "Authorization": token,
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) discord/1.0.9154 Chrome/124.0.6367.243 Electron/30.1.0 Safari/537.36'
+        'User-Agent': constants.UA
     }
 
     response = requests.patch(request_url, json=payload, headers=headers)
@@ -290,7 +290,7 @@ def change_username(username, password, token):
     headers = {
         "Content-Type": "application/json",
         "Authorization": token,
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) discord/1.0.9154 Chrome/124.0.6367.243 Electron/30.1.0 Safari/537.36'
+        'User-Agent': constants.UA
     }
 
     response = requests.patch(request_url, json=payload, headers=headers)
@@ -317,7 +317,7 @@ def get_token(email, password):
     }
     headers = {
         "Content-Type": "application/json",
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) discord/1.0.9154 Chrome/124.0.6367.243 Electron/30.1.0 Safari/537.36'
+        'User-Agent': constants.UA
     }
 
     response = requests.post(request_url, json=payload, headers=headers)
@@ -352,7 +352,7 @@ def change_custom_status(encoded_str, replacements, token):
     headers = {
         "Content-Type": "application/json",
         'Authorization': token,
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) discord/1.0.9154 Chrome/124.0.6367.243 Electron/30.1.0 Safari/537.36'
+        'User-Agent': constants.UA
     }
 
     response = requests.patch(request_url, json=payload, headers=headers)
@@ -369,7 +369,7 @@ def get_list_channels_id(guild_id, token):
     headers = {
         'Authorization': token,
         'Content-Type': 'application/json',
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) discord/1.0.9154 Chrome/124.0.6367.243 Electron/30.1.0 Safari/537.36'
+        'User-Agent': constants.UA
     }
 
     response = requests.get(BASE_URL + f"/guilds/{guild_id}/channels", headers=headers)
@@ -385,7 +385,7 @@ def sys_get_channels_id(guild_id, token):
     headers = {
         'Authorization': token,
         'Content-Type': 'application/json',
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) discord/1.0.9154 Chrome/124.0.6367.243 Electron/30.1.0 Safari/537.36'
+        'User-Agent': constants.UA
     }
 
     response = requests.get(f'https://discord.com/api/v10/guilds/{guild_id}/channels', headers=headers)
@@ -401,7 +401,7 @@ def sys_get_channels_id(guild_id, token):
 def join_server(invite_link, token):
     headers = {
         'Authorization': token,
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) discord/1.0.9154 Chrome/124.0.6367.243 Electron/30.1.0 Safari/537.36'
+        'User-Agent': constants.UA
     }
 
     invite_code = invite_link.split('/')[-1]
@@ -419,7 +419,7 @@ def send_message_to_friend(token, message_content, identifier):
     headers = {
         'Authorization': token,
         'Content-Type': 'application/json',
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) discord/1.0.9154 Chrome/124.0.6367.243 Electron/30.1.0 Safari/537.36'
+        'User-Agent': constants.UA
     }
 
     for friend_id in identifier:
@@ -446,7 +446,7 @@ def send_message_to_channel(token, message_content, channel_ids):
     headers = {
         'Authorization': token,
         'Content-Type': 'application/json',
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) discord/1.0.9154 Chrome/124.0.6367.243 Electron/30.1.0 Safari/537.36'
+        'User-Agent': constants.UA
     }
     for channel_id in channel_ids:
 
@@ -468,7 +468,7 @@ def get_discord_group_dms(token):
     url = BASE_URL + "/users/@me/channels"
     headers = {
         'Authorization': token,
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) discord/1.0.9154 Chrome/124.0.6367.243 Electron/30.1.0 Safari/537.36'
+        'User-Agent': constants.UA
     }
 
     response = requests.get(url, headers=headers)
@@ -486,7 +486,7 @@ def hypesquad(token, house_id):
     headers = {
         'Authorization': f'{token}',
         'Content-Type': 'application/json',
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) discord/1.0.9154 Chrome/124.0.6367.243 Electron/30.1.0 Safari/537.36'
+        'User-Agent': constants.UA
     }
     payload = {
         'house_id': house_id
@@ -521,7 +521,7 @@ def send_message_to_group(token, message, channel_id):
     headers = {
         'Authorization': f'{token}',
         'Content-Type': 'application/json',
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) discord/1.0.9154 Chrome/124.0.6367.243 Electron/30.1.0 Safari/537.36'
+        'User-Agent': constants.UA
     }
     payload = {
         'content': message
@@ -531,6 +531,11 @@ def send_message_to_group(token, message, channel_id):
 
     if response.status_code == 200 or response.status_code == 201:
         utils.log(f"Message sent to channel ID {channel_id}")
+    elif response.status_code == 429:
+        json_r = response.json()
+        retry_after = json_r["retry_after"]
+        utils.log(f"Sleeping until {retry_after}", no_silent=True)
+        time.sleep(float(retry_after))
     else:
         utils.log(f"Failed to send message to channel ID {channel_id}: {response.status_code} {response.text}")
 
@@ -540,7 +545,7 @@ def discord_nitro_expire(token):
     headers = {
         'Authorization': f'{token}',
         'Content-Type': 'application/json',
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) discord/1.0.9154 Chrome/124.0.6367.243 Electron/30.1.0 Safari/537.36'
+        'User-Agent': constants.UA
     }
 
     response = requests.get(url, headers=headers)
@@ -563,7 +568,7 @@ def get_sessions(token):
     url = BASE_URL + "/auth/sessions"
     headers = {
         'Authorization': f'{token}',
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) discord/1.0.9154 Chrome/124.0.6367.243 Electron/30.1.0 Safari/537.36'
+        'User-Agent': constants.UA
     }
 
     try:
@@ -594,7 +599,7 @@ def country_code_by(token):
     headers = {
         'Authorization': f'{token}',
         'Content-Type': 'application/json',
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) discord/1.0.9154 Chrome/124.0.6367.243 Electron/30.1.0 Safari/537.36'
+        'User-Agent': constants.UA
     }
 
     try:
@@ -619,7 +624,7 @@ def leaver(token, guild_id):
 
     headers = {
         'Authorization': f'{token}',
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) discord/1.0.9154 Chrome/124.0.6367.243 Electron/30.1.0 Safari/537.36'
+        'User-Agent': constants.UA
     }
 
     response = requests.delete(url, headers=headers)
@@ -636,7 +641,7 @@ def create_webhook(token, channel_id, webhook_name):
     headers = {
         "Authorization": token,
         "Content-Type": "application/json",
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) discord/1.0.9154 Chrome/124.0.6367.243 Electron/30.1.0 Safari/537.36'
+        'User-Agent': constants.UA
     }
 
     json_data = {
@@ -658,7 +663,7 @@ def delete_channels(guild_id, token):
     headers = {
         'Authorization': token,
         'Content-Type': 'application/json',
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) discord/1.0.9154 Chrome/124.0.6367.243 Electron/30.1.0 Safari/537.36'
+        'User-Agent': constants.UA
     }
 
     # Get all channels
@@ -683,7 +688,7 @@ def delete_roles(guild_id, token):
     headers = {
         'Authorization': token,
         'Content-Type': 'application/json',
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) discord/1.0.9154 Chrome/124.0.6367.243 Electron/30.1.0 Safari/537.36'
+        'User-Agent': constants.UA
     }
     # Get all roles
 
@@ -708,7 +713,7 @@ def ban_members(guild_id, token):
     headers = {
         'Authorization': token,
         'Content-Type': 'application/json',
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) discord/1.0.9154 Chrome/124.0.6367.243 Electron/30.1.0 Safari/537.36'
+        'User-Agent': constants.UA
     }
     # Get all members
 
@@ -734,7 +739,7 @@ def change_logo_guild(image_data, token, guild_id):
     headers = {
         'Authorization': token,
         'Content-Type': 'application/json',
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) discord/1.0.9154 Chrome/124.0.6367.243 Electron/30.1.0 Safari/537.36'
+        'User-Agent': constants.UA
     }
 
     url = f'https://discord.com/api/v9/guilds/{guild_id}'
@@ -758,7 +763,7 @@ def change_description(description, token, guild_id):
     headers = {
         'Authorization': token,
         'Content-Type': 'application/json',
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) discord/1.0.9154 Chrome/124.0.6367.243 Electron/30.1.0 Safari/537.36'
+        'User-Agent': constants.UA
     }
 
     url = BASE_URL + f"/guilds/{guild_id}"

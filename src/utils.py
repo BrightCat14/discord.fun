@@ -122,6 +122,7 @@ def init():
         with open(config_path, 'w') as f:
             f.write('kali')
 
+# logs
 def log(*args, no_silent=True, **kwargs):
     if no_silent:
         print(*args, **kwargs)
