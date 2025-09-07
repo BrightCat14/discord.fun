@@ -29,7 +29,7 @@
 3. Run the tool:
 
    ```bash
-   python -m src.main
+   python run.py
    ```
 
 ## Disclaimer
