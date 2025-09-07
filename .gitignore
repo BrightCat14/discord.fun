@@ -1,12 +1,18 @@
+# IDES
 .idea # pycharm
 .vscode # vscode
 .venv # venv
+
+# in older versions
 /src/config.txt
-/bckps/
 /config.txt
+
+# python files
 *.pyc
 *.pyi
 *.pyd
+
+# building
 /main.spec
 /dist
 /build

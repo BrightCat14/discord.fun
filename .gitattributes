@@ -1,0 +1,10 @@
+# text
+*.py text=auto
+*.txt text=auto
+.gitignore text=auto
+.gitattributes text=auto
+
+# images
+*.png binary
+*.webp binary
+*.ico binary

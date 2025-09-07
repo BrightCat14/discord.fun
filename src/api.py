@@ -388,7 +388,7 @@ def sys_get_channels_id(guild_id, token):
         'User-Agent': constants.UA
     }
 
-    response = requests.get(f'https://discord.com/api/v10/guilds/{guild_id}/channels', headers=headers)
+    response = requests.get(f'{BASE_URL}/guilds/{guild_id}/channels', headers=headers)
 
     if response.status_code == 200:
         channels = response.json()
@@ -429,7 +429,7 @@ def send_message_to_friend(token, message_content, identifier):
             response = requests.post(url, headers=headers, json={'recipient_id': friend_id})
             if response.status_code == 200:
                 channel_id = response.json()['id']
-                url_message = f'https://discord.com/api/v9/channels/{channel_id}/messages'
+                url_message = f'{BASE_URL}/channels/{channel_id}/messages'
                 response_message = requests.post(url_message, headers=headers, json={'content': message_content})
 
                 if response_message.status_code == 200:
@@ -742,7 +742,7 @@ def change_logo_guild(image_data, token, guild_id):
         'User-Agent': constants.UA
     }
 
-    url = f'https://discord.com/api/v9/guilds/{guild_id}'
+    url = f'{BASE_URL}/guilds/{guild_id}'
 
     json_data = {
         'icon': f'data:image/png;base64,{base64_image}'

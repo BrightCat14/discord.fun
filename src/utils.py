@@ -14,8 +14,45 @@ folder_name = os.path.basename(current_directory)
 username = os.getenv("USERNAME") if platform.system() == "Windows" else os.getenv("USER")
 home = Path.home()
 app_path = os.path.join(home, constants.name)
-config_path = os.path.join(app_path, "config.txt")
+theme_cfg = os.path.join(app_path, "theme.cfg")
+custom_prompt_path = os.path.join(app_path, "prompt.custom")
 log_path = os.path.join(app_path, f"{constants.name}.log")
+REPLACEMENTS = {
+    # Colors
+    "black": Fore.BLACK,
+    "red": Fore.RED,
+    "green": Fore.GREEN,
+    "yellow": Fore.YELLOW,
+    "blue": Fore.BLUE,
+    "magenta": Fore.MAGENTA,
+    "cyan": Fore.CYAN,
+    "dark_white": Fore.WHITE,
+
+    "gray": Fore.LIGHTBLACK_EX,
+    "light_red": Fore.LIGHTRED_EX,
+    "light_green": Fore.LIGHTGREEN_EX,
+    "light_yellow": Fore.LIGHTYELLOW_EX,
+    "light_blue": Fore.LIGHTBLUE_EX,
+    "light_magenta": Fore.LIGHTMAGENTA_EX,
+    "light_cyan": Fore.LIGHTCYAN_EX,
+    "white": Fore.LIGHTWHITE_EX,
+
+    "reset": Fore.RESET,
+
+    # technical
+    "username": username,
+    # folders
+    "home": home,
+    "cfn": folder_name,
+    "cwd": current_directory,
+
+    # constants
+    "vX": constants.vX,
+    "title": constants.title,
+    "version": constants.version,
+    "name": constants.name,
+    "author": constants.author
+}
 
 # craziest strings (some arabic symbols)
 crazy_small = "﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽﷽"
@@ -91,9 +128,12 @@ MENUS = {
     }
 }
 
-# menu function
+# menu functions
+def print_logo():
+    print(MENU_TEMPLATE, end="")  # for other logos please remove end=""
+
 def print_menu(page=1):
-    print(MENU_TEMPLATE, end="") # for other logos please remove end=""
+    print_logo()
     log(constants.title, no_silent=False)
     for i, option in enumerate(MENUS[page]["options"], start=1):
         print(f"{tabber.tab(4)}{Fore.LIGHTWHITE_EX}{i} - {option}{Fore.RESET}")
@@ -118,9 +158,12 @@ async def fetch_image_bytes(url):
 # init:
 def init():
     if not os.path.exists(app_path): os.mkdir(app_path)
-    if not os.path.exists(config_path):
-        with open(config_path, 'w') as f:
-            f.write('kali')
+    if not os.path.exists(theme_cfg):
+        with open(theme_cfg, 'w') as f:
+            f.write('kali-old')
+    if not os.path.exists(custom_prompt_path):
+        with open(custom_prompt_path, 'w') as f:
+            f.write('$')
 
 # logs
 def log(*args, no_silent=True, **kwargs):
@@ -134,3 +177,21 @@ def log(*args, no_silent=True, **kwargs):
         s = timestamp + '[empty log call]' + end
     with open(log_path, 'a', encoding='utf-8') as f:
         f.write(s)
+
+# prompts util
+def parse_custom_prompt(custom_prompt="$"):
+    result = ""
+    i = 0
+    while i < len(custom_prompt):
+        if custom_prompt[i] == "{" and "}" in custom_prompt[i:]:
+            j = custom_prompt.index("}", i)
+            key = custom_prompt[i+1:j].lower()
+            if key in REPLACEMENTS:
+                result += REPLACEMENTS[key]
+            else:
+                result += "{" + key + "}"
+            i = j + 1
+        else:
+            result += custom_prompt[i]
+            i += 1
+    return result + tabber.space()
