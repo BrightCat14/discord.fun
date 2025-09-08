@@ -222,7 +222,9 @@ def thread_spammer(token, channel_id, message_id, thread_name):
         'Content-Type': 'application/json',
         'User-Agent': constants.UA
     }
+
     response = requests.delete(request_url, headers=headers)
+
     if response.status_code == 200:
         utils.log("Successfully delete the thread")
     elif response.status_code == 429:
@@ -379,6 +381,7 @@ def get_list_channels_id(guild_id, token):
         return '\n'.join([f"{channel['id']} - {channel['name']}" for channel in channels])
     else:
         utils.log(f'Failed to fetch channels: {response.status_code} - {response.text}')
+        return response.status_code
 
 
 def sys_get_channels_id(guild_id, token):
@@ -396,6 +399,7 @@ def sys_get_channels_id(guild_id, token):
         return channels_id
     else:
         utils.log(f'Failed to fetch channels: {response.status_code} - {response.text}')
+        return response.status_code
 
 
 def join_server(invite_link, token):
@@ -472,16 +476,16 @@ def get_discord_group_dms(token):
     }
 
     response = requests.get(url, headers=headers)
-
+    response.raise_for_status()
     if response.status_code == 200:
         channels = response.json()
         group_dms = [channel for channel in channels if channel['type'] == 3]
         return group_dms
     else:
-        response.raise_for_status()
+        return response.status_code
 
 
-def hypesquad(token, house_id):
+def change_hype_squad(token, house_id):
     url = BASE_URL + "/hypesquad/online"
     headers = {
         'Authorization': f'{token}',
