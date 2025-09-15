@@ -6,7 +6,7 @@ from colorama import Fore
 from src import tabber
 
 # info
-author = "BrightCat14" # akaruineko
+author = "BrightCat14"  # akaruineko
 name = "discord.fun"
 vX = "v2"
 version = vX + tabber.separator() + "dev"
@@ -51,11 +51,13 @@ hints_dev = [
     "Your console screams in binary at night",
     "May contain traces of caffeine and despair",
     "Merge conflicts are your new best friends",
-    "Remember: StackOverflow is watching you"
+    "Remember: StackOverflow is watching you",
 ]
-hint_formatted = (Fore.YELLOW + random.choice(hints_dev) + Fore.RESET
-                  if any(word in version for word in ["beta", "dev", "alpha", "test"])
-                  else Fore.YELLOW + random.choice(hints) + Fore.RESET)
+hint_formatted = (
+    Fore.YELLOW + random.choice(hints_dev) + Fore.RESET
+    if any(word in version for word in ["beta", "dev", "alpha", "test"])
+    else Fore.YELLOW + random.choice(hints) + Fore.RESET
+)
 # useful in code
 UA = ua_generator.generate().text
 ICON_URL = f"https://raw.githubusercontent.com/{author}/{name}/refs/heads/{vX}/resources/icon.webp"
