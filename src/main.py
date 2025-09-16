@@ -27,7 +27,7 @@ colorama.init()
 utils.__init()
 
 
-def main():
+def sys_main():
     while True:
         cli.clear_screen()
 
@@ -367,11 +367,11 @@ def main():
             cli.get_return_input()
 
 
-if __name__ == "__main__":
+def main():
     try:
-        error = main()
+        code = sys_main()
         utils.log(
-            f"{Fore.RED}{constants.name.capitalize()} {constants.version} is exited, code: {error}{Fore.RESET}"
+            f"{Fore.RED}{constants.name.capitalize()} {constants.version} is exited, code: {code}{Fore.RESET}"
         )
     except Exception as e:
         utils.log(
