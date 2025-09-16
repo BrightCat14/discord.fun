@@ -17,3 +17,6 @@
 /dist
 /build
 /run.spec
+
+# local on mantainer computer
+/scripts/
