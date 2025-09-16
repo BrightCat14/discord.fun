@@ -18,7 +18,7 @@
 ## Installation
 1. Clone the repo:  
    ```bash
-   git clone https://github.com/BrightCat14/discord.fun.git
+   git clone --recurse-submodules https://github.com/BrightCat14/discord.fun.git
     ```
 
 2. Install dependencies:
