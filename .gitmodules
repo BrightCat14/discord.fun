@@ -1,0 +1,3 @@
+[submodule "src/discord_webhook"]
+	path = src/discord_webhook
+	url = https://github.com/discordfun/python-discord-webhook.git
