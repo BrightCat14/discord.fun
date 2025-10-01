@@ -18,7 +18,7 @@ import colorama
 
 # for discord api
 import requests
-from discord_webhook.discord_webhook import DiscordWebhook
+from src.discord_webhook.discord_webhook import DiscordWebhook
 
 # some utils
 from src import utils, cli, api, constants, nuke_bot
